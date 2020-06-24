@@ -54,6 +54,10 @@ The hardware itself sends raw data that is encoded as 16-bit integers. These val
 
 ## LSL Trigger Output Style
 
+These check boxes determine the way that LSL handles device triggers. Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
+
+Note that it is possible to enable neither, one of, or both trigger output styles simultaneously. They are not mutually exclusive.
+
 ### Unsampled String Markers
 
 If 'Unsampled String Markers' is checked, the app will create a Marker stream on 'Link' that will forward the triggers received the trigger input in the amplifier hardware. This stream will have the name 'BrainAmpSeries-x-Markers', where 'x' corresponds to the chosen device number.
