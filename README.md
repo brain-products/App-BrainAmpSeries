@@ -34,7 +34,7 @@ For most EEG experiments you can ignore the Chunk Size setting, but if you are d
 
 ### Impedance Mode
 
-For most applications it is recommended to leave the Impedance Mode and DC coupling options at their defaults. Further information is found in the amplifier's manual (and/or the BrainVision recorder manual).
+For most applications it is recommended to leave the Impedance Mode and DC coupling options at their defaults (High and AC respectively). Further information is found in the amplifier's manual (and/or the BrainVision recorder manual).
 
 ### Resolution
 
