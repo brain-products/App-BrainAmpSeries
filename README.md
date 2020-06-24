@@ -15,7 +15,7 @@ You can also find a useful (free) LSL viewer on the Brian Products website: [Bra
 # Usage
 
 Make sure that you have correctly installed the drivers for your amplifier, and that the amplifier is plugged in, turned on, and batteries are charged (see also official manual).
-  * Start the BrainAmpSeries app. You should see a window like the following.
+  * Start the BrainAmpSeries Connector app. You should see a window like the following.
 > ![brainampseries.png](brainampseries.png)
 
 ## Device Settings
