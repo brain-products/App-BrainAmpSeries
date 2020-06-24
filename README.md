@@ -32,6 +32,12 @@ Select the number of channels that you want to record from and enter the channel
 
 For most EEG experiments you can ignore the Chunk Size setting, but if you are developing a latency-critical real-time application (e.g., a P300 speller BCI), you can lower this setting to reduce the latency of your system. 
 
+### Sampling Rate
+
+The sampling rate is in Hz. Note that the native sampling rate for BrainAmp amplifiers is 5kHz. This means that for lower sampling rates, downsampling at the software (as opposed to hardware or driver) level is necessary. To stay consistent with recorder, this app can downsample by a factor of 1, 2, 5, 10, 20, 25. or 50, resulting in an effective sampling rate of 5000, 2500, 1000, 500, 250, 200, or 100Hz respectively.
+
+To prevent [anti aliasing](https://en.wikipedia.org/wiki/Aliasing) it is necessary to low-pass filter the incoming data prior to downsampling. This is done by way of 2nd order [Butterworth filters](https://en.wikipedia.org/wiki/Butterworth_filter), which are IIR filters that are maximally flat in the passband---thus ensuring minimal signal distortion from the downsampling process. This is also consistent with BrainVision Recorder.
+
 ### Impedance Mode
 
 For most applications it is recommended to leave the Impedance Mode and DC coupling options at their defaults (High and AC respectively). Further information is found in the amplifier's manual (and/or the BrainVision recorder manual).
