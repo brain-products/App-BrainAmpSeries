@@ -60,7 +60,7 @@ The hardware itself sends raw data that is encoded as 16-bit integers. These val
 
 ## LSL Trigger Output Style
 
-These check boxes determine the way that LSL handles device triggers. Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
+These check boxes determine the way that the app handles device triggers in LSL. 
 
 Note that it is possible to enable neither, one of, or both trigger output styles simultaneously. They are not mutually exclusive.
 
@@ -70,8 +70,11 @@ If 'Unsampled String Markers' is checked, the app will create a Marker stream on
 
 ### EEG Channel
 
-If this box is checked, an extra channel will be added to the EEG stream corresponding to the device triggers in. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the value at the tirgger input when it changes value.
+If this box is checked, an extra channel will be added to the EEG stream corresponding to the device triggers in. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the value at the trigger input when it changes value.
 
+### Further Information
+
+Please see the file [explanation_of_trigger_marker_types.pdf]( https://github.com/brain-products/LSL-LiveAmp/blob/master/explanation_of_trigger_marker_types.pdf) for more details.
 
  ## Link
 
@@ -92,6 +95,6 @@ The latest version of the BrainAmpSeries Connector uses [INI](https://en.wikiped
 `[channels]`
 `labels=Fp1, Fp2, F7, F3, Fz, F4, F8, FC5, FC1, FC2, FC6, T7, C3, Cz, C4, T8, TP9, CP5, CP1, CP2, CP6, TP10, P7, P3, Pz, P4, P8, PO9, O1, Oz, O2, PO10`
 
-## Loading channel label files
+## Loading Channel Label Files
 
-Python users may automatically insert channel labels from a .bvef file into an LSL config file. To do so, please use the free utility [BVEF2lslconfig] (https://github.com/brain-products/BVEF2lslconfig). You can find many electrode position files with channel labels for common cap configurations on the Brain Products website [here] (https://www.brainproducts.com/downloads.php?kid=44). 
+Python users may automatically insert channel labels from a .bvef file into an LSL config file. To do so, please use the free utility [BVEF2lslconfig] (https://github.com/brain-products/BVEF2lslconfig). You can find many electrode position files with channel labels for common cap configurations on the Brain Products website [here](https://www.brainproducts.com/downloads.php?kid=44). 
