@@ -20,6 +20,7 @@ build_script:
     cmake -S . -B build -DQt5_DIR=C:/Qt/%QTVER%/%QTCOMPILER%/lib/cmake/Qt5 -Dlsl_DIR=LSL/share/LSL/ %CMakeArgs% -A x64
 
     cmake --build build --config Release -j --target package
+
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
