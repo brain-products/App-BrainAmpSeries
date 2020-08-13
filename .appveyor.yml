@@ -1,0 +1,31 @@
+version: 1.0.{build}
+branches:
+  only:
+  - ci_devel
+environment:
+  lsltag: 1.13.1
+  lslversion: 1.13.1
+  LSLDIST_URL: '"https://github.com/sccn/liblsl/releases/download"'
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    QTCOMPILER: msvc2019_64
+    QTVER: 5.15.0
+install:
+- cmd: >-
+    appveyor DownloadFile %LSLDIST_URL%/%lsltag%/liblsl-%lslversion%-Win64.zip -FileName liblsl_x64.zip
+
+    7z x liblsl_x64.zip -oLSL
+build_script:
+- cmd: >-
+    cmake -S . -B build -DQt5_DIR=C:/Qt/%QTVER%/%QTCOMPILER%/lib/cmake/Qt5 -DLSL_INSTALL_ROOT=LSL/ %CMakeArgs% -A x64
+
+    cmake --build build --config Release -j --target package
+deploy:
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: v$(appveyor_build_version)
+  auth_token:
+    secure: 2yHQhjD3YRMI9qk5J6qcUT+CP8yJQlcQfLsP0N6YUyw+BhXmpdoLkVejEziW2WYP
+  artifact: build\*.7z
+  on:
+    branch: ci_devel
