@@ -1,7 +1,4 @@
 version: 1.0.{build}
-branches:
-  only:
-  - ci_devel
 environment:
   lsltag: 1.13.1
   lslversion: 1.13.1
