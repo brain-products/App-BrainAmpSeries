@@ -1,9 +1,10 @@
-ui_*.h
 BrainAmpSeries/.vs/
 BrainAmpSeries/bin/
 BrainAmpSeries/Debug/
 BrainAmpSeries/Release/
+/build*/
 *.dll
 *.exe
 *.bit
 *.aps
+.vs

@@ -1,0 +1,87 @@
+name: C/C++ CI
+
+on:
+  push:
+    tags:
+    - v*.*
+    
+env:
+  LSL_URL: 'https://github.com/sccn/liblsl/releases/tag/'
+  LSL_RELEASE_PREFIX: ''
+  LSL_TAG: '1.13.0-b13'
+  LSL_RELEASE: '1.13.0'
+  LSL_RELEASE_SUFFIX: ''
+  APP_VERSION: 'v1.14.2'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Qt (Windows)
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: 5.15.0
+        
+        #$Env:LSL_URL/$Env:LSL_RELEASE_PREFIX$Env:LSL_RELEASE$Env:LSL_RELEASE_SUFFIX/liblsl-$Env:LSL_RELEASE-Win64.zip -o liblsl.7z
+           
+    - name: Get LSL
+      run: |
+           Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.7z
+           7z x liblsl.7z -oLSL
+    
+    - name: configure cmake
+      run: |
+           cmake -S . -B build -Dlsl_DIR=LSL/share/LSL
+        
+    - name: build
+      run: |
+           cmake --build build --config Release --target install
+    
+    - name: package
+      run: |
+           cd build
+           cpack -C Release  
+           pwd
+           ls
+           cd ..
+           
+    - name: create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: .\build\BrainAmpSeries-1.14.1-Win64.7z
+        asset_name: BrainAmpSeries-1.14.1-Win64.7z
+        asset_content_type: application/7z
+      
+#    -name: create release  
+#      if: startsWith(github.ref, 'refs/tags/')
+#      id: create_release
+#      uses: softprops/action-gh-release@v1
+        
+#    - name: Upload a Release Asset
+#      uses: actions/upload-release-asset@v1.0.2
+#      env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      with:
+        # tag_name: ${{ github.ref }}  # ${{ github.ref }} is default
+#        name: Release ${{ github.ref }}
+#        draft: false
+#        prerelease: false
+#        files: build/*.7z
