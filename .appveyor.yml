@@ -17,7 +17,7 @@ install:
     7z x liblsl_x64.zip -oLSL
 build_script:
 - cmd: >-
-    cmake -S . -B build -DQt5_DIR=C:/Qt/%QTVER%/%QTCOMPILER%/lib/cmake/Qt5 -Dlsl_DIR=LSL/share/ %CMakeArgs% -A x64
+    cmake -S . -B build -DQt5_DIR=C:/Qt/%QTVER%/%QTCOMPILER%/lib/cmake/Qt5 -Dlsl_DIR=LSL/share/LSL/ %CMakeArgs% -A x64
 
     cmake --build build --config Release -j --target package
 deploy:
