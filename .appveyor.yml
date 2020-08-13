@@ -19,14 +19,4 @@ build_script:
 - cmd: >-
     cmake -S . -B build -DQt5_DIR=C:/Qt/%QTVER%/%QTCOMPILER%/lib/cmake/Qt5 -Dlsl_DIR=LSL/share/LSL/ %CMakeArgs% -A x64
 
-    cmake --build build --config Release -j --target package
-
-deploy:
-- provider: GitHub
-  tag: v$(appveyor_build_version)
-  release: v$(appveyor_build_version)
-  auth_token:
-    secure: 2yHQhjD3YRMI9qk5J6qcUT+CP8yJQlcQfLsP0N6YUyw+BhXmpdoLkVejEziW2WYP
-  artifact: build\*.7z
-  on:
-    branch: ci_devel
+    cmake --build build --config Release -j --target BrainAmpSeries
