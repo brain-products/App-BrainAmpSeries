@@ -1,4 +1,3 @@
-BrainAmpSeries Connector v.1.14.1
--adapted to GUI to conformt to actiCHamp and LiveAmp style
---automatic channel labeling
--fixed Marker bug related to non-negative indexing in timestamp calculation
+BrainAmpSeries Connector v.1.15.0
+-fixed incorrect timing of markers in EEG trigger channel due to impropoer downsampling
+--NOTE: The signal appearing on the EEG trigger channel, when checked, now reflects the signal at the serial port of the amplifier, not changes to the values at the serial port. 

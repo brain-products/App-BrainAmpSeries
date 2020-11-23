@@ -281,7 +281,8 @@ void MainWindow::toggleRecording() {
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_GET_SERIALNUMBER, nullptr, 0, &serialNumber,
 					sizeof(serialNumber), &bytes_returned, nullptr))
 				qWarning() << "Could not get device serial number.";
-
+			// why is this always 0?
+			conf.serialNumber = (int)serialNumber;
 			// set up device parameters
 			BA_SETUP setup = {0};
 			setup.nChannels = conf.channelCount;
@@ -368,17 +369,18 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 	bool bDoFiltering = (sampling_rate == 5000) ? false : true;
 	for (int i = 0; i < conf.channelCount; i++)
 		downsamplers.push_back(Downsampler<T>(downsampling_factor, conf.chunkSize, bDoFiltering));
-	downsamplers.push_back(Downsampler<T>(downsampling_factor, conf.chunkSize, false));
+	//downsamplers.push_back(Downsampler<T>(downsampling_factor, conf.chunkSize, false));
 	std::vector<std::string> marker_buffer(conf.chunkSize, std::string());
 	std::string s_mrkr;
 
-	const std::string streamprefix = "BrainAmpSeries-" + std::to_string(conf.deviceNumber);
+	const std::string streamprefix = "BrainAmpSeries-Dev_" + std::to_string(conf.deviceNumber);
 
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 	// for keeping track of sampled marker stream data
 	uint16_t mrkr = 0;
 	uint16_t prev_mrkr = 0;
+	uint16_t outside_prev_mrkr = 0;
 
 	// for keeping track of unsampled markers
 	// uint16_t us_prev_mrkr = 0;
@@ -388,7 +390,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		// create data streaminfo and append some meta-data
 		auto stream_format = sendRawStream ? lsl::cf_int16 : lsl::cf_float32;
 		lsl::stream_info data_info(streamprefix, "EEG", outbufferChannelCount, sampling_rate,
-			stream_format, streamprefix + '_' + std::to_string(conf.serialNumber) + "_SR-" + std::to_string(sampling_rate));
+			stream_format, streamprefix /*+ '_' + std::to_string(conf.serialNumber)*/ + "_SR-" + std::to_string(sampling_rate));
 		lsl::xml_element channels = data_info.desc().append_child("channels");
 		std::string postprocessing_factor =
 			sendRawStream ? std::to_string(unit_scales[conf.resolution]) : "1";
@@ -438,7 +440,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 
 		if (m_bUnsampledMarkers) {
 			lsl::stream_info marker_info(streamprefix + "-Markers", "Markers", 1, 0, lsl::cf_string,
-				streamprefix + '_' + std::to_string(conf.serialNumber) + "_markers");
+				streamprefix /*+ '_' + std::to_string(conf.serialNumber)*/ + "_markers");
 			marker_outlet.reset(new lsl::stream_outlet(marker_info));
 		}  
 
@@ -479,57 +481,57 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			auto sendbuf_it = send_buffer.begin();
 			auto inter_it = inter_buffer.begin();
 
-			for (unsigned int c = 0; c < conf.channelCount+1; c++)
+			//for (int c = 0; c < conf.channelCount + 1; c++)
+			for (int c = 0; c < conf.channelCount; c++)
 			{
 				inter_it = inter_buffer.begin();
-				for (unsigned int s = 0; s < conf.chunkSize*downsampling_factor; s++)
+				for (int s = 0; s < conf.chunkSize*downsampling_factor; s++)
+					// +1 to include trigger data, which doesn't get downsampled or filtered
 					*inter_it++ = *(recvbuf_it + (c + s * (conf.channelCount + 1)));
 				downsamplers[c].Downsample(&inter_buffer[0]);
 			}
-			//send_buffer_vec.clear();
-			for (unsigned int c = 0; c < conf.channelCount; c++)
-				for (unsigned int s = 0; s < conf.chunkSize; s++)
+
+			for (int c = 0; c < conf.channelCount; c++)
+				for (int s = 0; s < conf.chunkSize; s++)
 					send_buffer_vec[s][c] = downsamplers[c].m_ptDataOut[s] * scale;
-					//*(sendbuf_it + (s * conf.channelCount + c)) = downsamplers[c].m_ptDataOut[s] * scale;
 
-			//inter_it = inter_buffer.begin();
-			//for (unsigned int s = 0; s < conf.chunkSize * downsampling_factor; s++)
-			//	*inter_it++ = *(recvbuf_it + (conf.channelCount + s * (conf.channelCount + 1)));
-			//downsamplers[conf.channelCount].Downsample(&inter_buffer[0]);
 
-			for (int s = 0; s < conf.chunkSize; s++)
+			//for (int s = 0; s < conf.chunkSize; s++)
+			int nOutBufferSampleCtr = 0;
+			for (int s = 0; s < conf.chunkSize*downsampling_factor; s++)
 			{
-				mrkr = (uint16_t)downsamplers[conf.channelCount].m_ptDataOut[s];
+				//mrkr = (uint16_t)downsamplers[conf.channelCount].m_ptDataOut[s];
+				mrkr = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
 				mrkr ^= m_nPullDir;
 
-				if(m_bSampledMarkersEEG)
-					send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
-				//if (m_bSampledMarkersEEG)
-				//	*(sendbuf_it + (s * conf.channelCount + conf.channelCount)) = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+				if (m_bSampledMarkersEEG)
+					send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					//send_buffer_vec[s][conf.channelCount] = static_cast<T>(mrkr);//((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					
 
 				if (m_bUnsampledMarkers)
 				{
 					if (mrkr != prev_mrkr)
 					{
 						s_mrkr = std::to_string((int)mrkr);
-						int num = s + 1 - conf.chunkSize;
+						int num = nOutBufferSampleCtr + 1 - conf.chunkSize;
+						//int num = s + 1 - conf.chunkSize;
 						double dNum = (double)num;
 						double ts = dNum / sampling_rate;
-						marker_outlet->push_sample(&s_mrkr, now + ts);//(double)(s + 1 - conf.chunkSize) / sampling_rate);
+						marker_outlet->push_sample(&s_mrkr, now + ts);
 					}
 				}
 				prev_mrkr = mrkr;
+				if((s%downsampling_factor)==0 && s!=0)
+					nOutBufferSampleCtr++;
 			}
 
 			// push data chunk into the outlet
 			data_outlet.push_chunk(send_buffer_vec, now);
-			//data_outlet.push_chunk_multiplexed(send_buffer, now);
 		}
 	} catch (std::exception &e) {
 		// any other error
 		std::cout << "Exception in read thread: " << e.what();
-		//QMessageBox::critical(
-			//nullptr, "Error", QString("Error during processing: ") + e.what(), QMessageBox::Ok);
 	}
 }
 
