@@ -1,3 +1,6 @@
+BrainAmpSeries Connector v.1.15.1
+-bugfix: replaced antialiasing filter coefficients with correct values
+
 BrainAmpSeries Connector v.1.15.0
 -fixed incorrect timing of markers in EEG trigger channel due to impropoer downsampling
 --NOTE: The signal appearing on the EEG trigger channel, when checked, now reflects the signal at the serial port of the amplifier, not changes to the values at the serial port. 

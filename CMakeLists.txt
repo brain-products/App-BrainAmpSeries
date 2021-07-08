@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 set(PROJECT_VERSION_MAJOR 1)
-set(PROJECT_VERSION_MINOR 14)
+set(PROJECT_VERSION_MINOR 15)
 set(PROJECT_VERSION_PATCH 1)
 
 project(BrainAmpSeries

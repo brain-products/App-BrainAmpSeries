@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 	ui->setupUi(this);
 
 	m_AppVersion.Major = 1;
-	m_AppVersion.Minor = 14;
+	m_AppVersion.Minor = 15;
 	m_AppVersion.Bugfix = 1;
 	m_bOverrideAutoUpdate = false;
 

@@ -95,18 +95,18 @@ public:
 	}
 };
 
-const double pdBCoeffs2[] = { 0.292893218813452,   0.585786437626905,   0.292893218813452};
-const double pdACoeffs2[] = { 1.000000000000000, -0.000000000000000,   0.171572875253810};
-const double pdBCoeffs5[] = { 0.067455273889072 ,  0.134910547778144,  0.067455273889072};
-const double pdACoeffs5[] = { 1.000000000000000, -1.142980502539901,   0.412801598096189};
-const double pdBCoeffs10[] = { 0.020083365564211,   0.040166731128423,   0.020083365564211};
-const double pdACoeffs10[] = { 1.000000000000000, -1.561018075800718,   0.641351538057563};
-const double pdBCoeffs20[] = { 0.005542717210281,   0.011085434420561,   0.005542717210281};
-const double pdACoeffs20[] = { 1.000000000000000, -1.778631777824585,   0.800802646665708};
-const double pdBCoeffs25[] = { 0.003621681514929,   0.007243363029857,   0.003621681514929};
-const double pdACoeffs25[] = { 1.000000000000000, -1.822694925196308,   0.837181651256023};
-const double pdBCoeffs50[] = { 0.020083365564211,   0.040166731128423,   0.020083365564211};
-const double pdACoeffs50[] = { 1.000000000000000, - 1.561018075800718,   0.641351538057563};
+const double pdBCoeffs2[] = { 0.914969144113082, 1.829938288226165,   0.914969144113082 };
+const double pdACoeffs2[] = { 1.000000000000000,   1.822694925196307,   0.837181651256022 };
+const double pdBCoeffs5[] = { 0.800592403464570,   1.601184806929141,   0.800592403464570};
+const double pdACoeffs5[] = { 1.000000000000000,   1.561018075800718,   0.641351538057563 };
+const double pdBCoeffs10[] = { 0.800592403464570,   1.601184806929141,   0.800592403464570 };
+const double pdACoeffs10[] = { 1.000000000000000,   1.561018075800718,   0.641351538057563 };
+const double pdBCoeffsElse[] = { 0.800592403464570,   1.601184806929141,   0.800592403464570 };
+const double pdACoeffsElse[] = { 1.000000000000000,   1.561018075800718,   0.641351538057563 };
+//const double pdBCoeffs25[] = { 0.003621681514929,   0.007243363029857,   0.003621681514929};
+//const double pdACoeffs25[] = { 1.000000000000000, -1.822694925196308,   0.837181651256023};
+//const double pdBCoeffs50[] = { 0.020083365564211,   0.040166731128423,   0.020083365564211};
+//const double pdACoeffs50[] = { 1.000000000000000, - 1.561018075800718,   0.641351538057563};
 template<class T>
 class Downsampler
 {
@@ -161,26 +161,28 @@ public:
 			}
 			break;
 		case 20:
-			for (int i = 0; i < 3; i++)
-			{
-				pdBCoeffs[i] = pdBCoeffs20[i];
-				pdACoeffs[i] = pdACoeffs20[i];
-			}
-			break;
 		case 25:
-			for (int i = 0; i < 3; i++)
-			{
-				pdBCoeffs[i] = pdBCoeffs25[i];
-				pdACoeffs[i] = pdACoeffs25[i];
-			}
-			break;
 		case 50:
 			for (int i = 0; i < 3; i++)
 			{
-				pdBCoeffs[i] = pdBCoeffs50[i];
-				pdACoeffs[i] = pdACoeffs50[i];
+				pdBCoeffs[i] = pdBCoeffsElse[i];
+				pdACoeffs[i] = pdACoeffsElse[i];
 			}
 			break;
+		//case 25:
+		//	for (int i = 0; i < 3; i++)
+		//	{
+		//		pdBCoeffs[i] = pdBCoeffs25[i];
+		//		pdACoeffs[i] = pdACoeffs25[i];
+		//	}
+		//	break;
+		//case 50:
+		//	for (int i = 0; i < 3; i++)
+		//	{
+		//		pdBCoeffs[i] = pdBCoeffs50[i];
+		//		pdACoeffs[i] = pdACoeffs50[i];
+		//	}
+		//	break;
 		
 		}
 	
