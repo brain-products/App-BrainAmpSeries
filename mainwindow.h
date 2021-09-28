@@ -19,6 +19,7 @@ struct ReaderConfig
 	bool dcCoupling, usePolyBox, lowImpedanceMode;
 	int chunkSize, channelCount, serialNumber;
 	std::vector<std::string> channelLabels;
+	int useMRLowPass;
 };
 
 struct t_AppVersion

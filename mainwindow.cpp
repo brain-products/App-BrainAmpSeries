@@ -68,8 +68,8 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 	ui->setupUi(this);
 
 	m_AppVersion.Major = 1;
-	m_AppVersion.Minor = 15;
-	m_AppVersion.Bugfix = 1;
+	m_AppVersion.Minor = 16;
+	m_AppVersion.Bugfix = -1;
 	m_bOverrideAutoUpdate = false;
 
 	// make GUI connections
@@ -255,6 +255,7 @@ void MainWindow::toggleRecording() {
 			conf.dcCoupling = static_cast<unsigned char>(ui->dcCoupling->currentIndex());
 			conf.chunkSize = ui->chunkSize->value();
 			conf.usePolyBox = ui->usePolyBox->checkState() == Qt::Checked;
+			conf.useMRLowPass = 1;
 			bool sendRawStream = ui->sendRawStream->isChecked();
 
 			m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
@@ -290,8 +291,10 @@ void MainWindow::toggleRecording() {
 				setup.nChannelList[c] = c + (conf.usePolyBox ? -8 : 0);
 			setup.nPoints = conf.chunkSize * downsampling_factor;
 			setup.nHoldValue = 0;
+			
 			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nResolution[c] = conf.resolution;
 			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nDCCoupling[c] = conf.dcCoupling;
+			for (UCHAR c = 0; c < conf.channelCount; c++) setup.n250Hertz[c] = conf.useMRLowPass;
 			setup.nLowImpedance = conf.lowImpedanceMode;
 
 			m_bPullUpHiBits = true;
@@ -446,7 +449,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 
 		// enter transmission loop
 		DWORD bytes_read;
-		const T scale = std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
+		const T scale = .5;// std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
 
 		while (!shutdown) {
 			// read chunk into recv_buffer
