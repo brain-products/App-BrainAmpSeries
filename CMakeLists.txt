@@ -109,8 +109,6 @@ function(addQtDeployToInstall target)
 	message(STATUS "MENU appended: ${target}")
 endfunction()
 
-
-
 install(TARGETS ${PROJECT_NAME}
 	COMPONENT "${PROJECT_NAME}"
 	BUNDLE DESTINATION ${PROJECT_NAME}
