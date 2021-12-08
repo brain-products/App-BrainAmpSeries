@@ -32,6 +32,10 @@ Select the number of channels that you want to record from and enter the channel
 
 For most EEG experiments you can ignore the Chunk Size setting, but if you are developing a latency-critical real-time application (e.g., a P300 speller BCI), you can lower this setting to reduce the latency of your system. 
 
+### Use MR Settings
+
+For recordings done in the MR scanner (BrainAmpMR and BrainAmpMRplus only), checking this box will automatically choose the recommended settings for use in the scanner.
+
 ### Sampling Rate
 
 The sampling rate is in Hz. Note that the native sampling rate for BrainAmp amplifiers is 5kHz. This means that for lower sampling rates, downsampling at the software (as opposed to hardware or driver) level is necessary. To stay consistent with recorder, this app can downsample by a factor of 1, 2, 5, 10, 20, 25. or 50, resulting in a nominal sampling rate of 5000, 2500, 1000, 500, 250, 200, or 100Hz respectively.
@@ -44,11 +48,15 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
 
 ### Resolution
 
-If you have strong noise sources or you observe clipping of your recorded signal, you can change the resolution setting to a coarser stepping.
+Desired LSB value for digital signals. Note BrainAmp MR devices only support 5 nanovolt resolution.
 
 ### DC Coupling
 
 Select AC or DC coupling (BrainAmp DC).
+
+### Hardware Filter
+
+This is an optional lowpass filter executed at the hardware level. For MR recordings it is important to choose 250 Hz.
 
 ### Use PolyBox
 
