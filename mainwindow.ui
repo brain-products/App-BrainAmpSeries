@@ -152,24 +152,24 @@ PO10 </string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
             <string>Sampling Rate</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="4" column="1">
           <widget class="QComboBox" name="cbSamplingRate"/>
          </item>
-         <item row="4" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
             <string>Impedance Mode</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="5" column="1">
           <widget class="QComboBox" name="impedanceMode">
            <property name="toolTip">
             <string>The default setting is to operate in high-impedance mode (less need for perfect electrode contact)</string>
@@ -186,14 +186,14 @@ PO10 </string>
            </item>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="6" column="0">
           <widget class="QLabel" name="label_5">
            <property name="text">
             <string>Resolution</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
+         <item row="6" column="1">
           <widget class="QComboBox" name="resolution">
            <property name="toolTip">
             <string>Resolution of the measured signal</string>
@@ -208,26 +208,16 @@ PO10 </string>
              <string>500 nV</string>
             </property>
            </item>
-           <item>
-            <property name="text">
-             <string>10 µV</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>152.6 µV</string>
-            </property>
-           </item>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="7" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>DC Coupling</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item row="7" column="1">
           <widget class="QComboBox" name="dcCoupling">
            <property name="toolTip">
             <string>The default is AC</string>
@@ -244,7 +234,34 @@ PO10 </string>
            </item>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="10" column="0" colspan="2">
+          <widget class="QCheckBox" name="sendRawStream">
+           <property name="text">
+            <string>Send Raw Stream (int16_t)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QComboBox" name="hwFilter">
+           <property name="editable">
+            <bool>false</bool>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>1000 Hz</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>250 Hz</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="9" column="0">
           <widget class="QCheckBox" name="usePolyBox">
            <property name="enabled">
             <bool>true</bool>
@@ -257,10 +274,17 @@ PO10 </string>
            </property>
           </widget>
          </item>
-         <item row="8" column="0" colspan="2">
-          <widget class="QCheckBox" name="sendRawStream">
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Send Raw Stream (int16_t)</string>
+            <string>Hardware Filter</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="cbUseMRSettings">
+           <property name="text">
+            <string>Use MR Settings</string>
            </property>
           </widget>
          </item>
@@ -418,7 +442,6 @@ PO10 </string>
   <tabstop>impedanceMode</tabstop>
   <tabstop>resolution</tabstop>
   <tabstop>dcCoupling</tabstop>
-  <tabstop>usePolyBox</tabstop>
   <tabstop>linkButton</tabstop>
  </tabstops>
  <resources/>

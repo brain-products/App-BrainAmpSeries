@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 16;
-	m_AppVersion.Bugfix = -1;
+	m_AppVersion.Bugfix = 0;
 	m_bOverrideAutoUpdate = false;
 
 	// make GUI connections
@@ -86,6 +86,7 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 	connect(ui->linkButton, &QPushButton::clicked, this, &MainWindow::toggleRecording);
 	QObject::connect(ui->actionVersions, SIGNAL(triggered()), this, SLOT(VersionsDialog()));
 	QObject::connect(ui->channelCount, SIGNAL(valueChanged(int)), this, SLOT(UpdateChannelLabelsGUI(int)));
+	QObject::connect(ui->cbUseMRSettings, SIGNAL(stateChanged(int)), this, SLOT(MRSettingsToggled(int)));
 	for (int i = 0; i < 7; i++)
 		ui->cbSamplingRate->addItem(QString::fromStdString(std::to_string(sampling_rates[i])));
 	QString cfgfilepath = find_config_file(config_file);
@@ -141,6 +142,25 @@ void MainWindow::setSamplingRate()
 	downsampling_factor = downsampling_factors[ui->cbSamplingRate->currentIndex()];
 }
 
+void MainWindow::MRSettingsToggled(int)
+{
+	if (ui->cbUseMRSettings->isChecked())
+	{
+		ui->resolution->setCurrentIndex(1);
+		ui->resolution->setDisabled(true);		
+		ui->hwFilter->setCurrentIndex(1);
+		ui->hwFilter->setDisabled(true);
+		ui->cbSamplingRate->setCurrentIndex(0);
+		ui->cbSamplingRate->setDisabled(true);
+	}
+	else
+	{
+		ui->resolution->setDisabled(false);
+		ui->hwFilter->setDisabled(false);
+		ui->cbSamplingRate->setDisabled(false);
+	}
+}
+
 int getSamplingRateIndex(int nSamplingRate)
 {
 	switch (nSamplingRate)
@@ -173,8 +193,10 @@ void MainWindow::load_config(const QString &filename) {
 	ui->impedanceMode->setCurrentIndex(pt.value("settings/impedancemode", 0).toInt());
 	ui->cbSamplingRate->setCurrentIndex(getSamplingRateIndex(pt.value("settings/samplingrate", 500).toInt()));
 	setSamplingRate();
+	ui->cbUseMRSettings->setChecked(pt.value("settings/usemr", false).toBool());
 	ui->resolution->setCurrentIndex(pt.value("settings/resolution", 0).toInt());
 	ui->dcCoupling->setCurrentIndex(pt.value("settings/dccoupling", 0).toInt());
+	ui->hwFilter->setCurrentIndex(pt.value("settings/hardwarefilter", 0).toInt());
 	ui->chunkSize->setValue(pt.value("settings/chunksize", 32).toInt());
 	ui->usePolyBox->setChecked(pt.value("settings/usepolybox", false).toBool());
 	ui->sendRawStream->setChecked(pt.value("settings/sendrawstream", false).toBool());
@@ -191,10 +213,12 @@ void MainWindow::save_config(const QString &filename) {
 	pt.setValue("devicenumber", ui->deviceNumber->value());
 	pt.setValue("devicenumber", ui->deviceNumber->value());
 	pt.setValue("channelcount", ui->channelCount->value());
+	pt.setValue("usemr", ui->cbUseMRSettings->isChecked());
 	pt.setValue("samplingrate", ui->cbSamplingRate->currentText());
 	pt.setValue("impedancemode", ui->impedanceMode->currentIndex());
 	pt.setValue("resolution", ui->resolution->currentIndex());
 	pt.setValue("dccoupling", ui->dcCoupling->currentIndex());
+	pt.setValue("hardwarefilter", ui->hwFilter->currentIndex());
 	pt.setValue("chunksize", ui->chunkSize->value());
 	pt.setValue("usepolybox", ui->usePolyBox->isChecked());
 	pt.setValue("sendrawstream", ui->sendRawStream->isChecked());
@@ -212,6 +236,29 @@ void MainWindow::closeEvent(QCloseEvent *ev) {
 		QMessageBox::warning(this, "Recording still running", "Can't quit while recording");
 		ev->ignore();
 	}
+}
+
+void MainWindow::CheckAmpTypeAgainstConfig(USHORT ampType, ReaderConfig config, bool useMRSettings)
+{
+
+	// check MR settings
+	if (ampType == 1 || ampType==2)
+	{
+		if (config.dcCoupling == true)
+			throw std::runtime_error("DC Coupling not supported by this amplifier type.");
+		if (config.lowImpedanceMode == true)
+			throw std::runtime_error("Low Impedance Mode not supported by this amplifier type.");
+	}
+	// check MR settings
+	if (ampType == 2)
+	{
+		if (config.resolution == 0)
+			throw std::runtime_error("100 nanoVolt Resolution not supported by this amplifier type.");
+	}
+	if(useMRSettings)
+		if(ampType==1)
+			QMessageBox(QMessageBox::Warning, "Possible Settings/Amplifier type mismatch",
+				QStringLiteral("Use MR Settings is checked, but amplifier type is not MR or MRplus"), QMessageBox::Ok, this);
 }
 
 // start/stop the BrainAmpSeries connection
@@ -255,7 +302,7 @@ void MainWindow::toggleRecording() {
 			conf.dcCoupling = static_cast<unsigned char>(ui->dcCoupling->currentIndex());
 			conf.chunkSize = ui->chunkSize->value();
 			conf.usePolyBox = ui->usePolyBox->checkState() == Qt::Checked;
-			conf.useMRLowPass = 1;
+			conf.useMRLowPass = ui->hwFilter->currentIndex();; // default, check later if it is brai
 			bool sendRawStream = ui->sendRawStream->isChecked();
 
 			m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
@@ -277,11 +324,12 @@ void MainWindow::toggleRecording() {
 					"Could not open USB device. Please make sure that the device is plugged in, "
 					"turned on, and that the driver is installed correctly.");
 
+
 			// get serial number
 			ULONG serialNumber = 0;
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_GET_SERIALNUMBER, nullptr, 0, &serialNumber,
 					sizeof(serialNumber), &bytes_returned, nullptr))
-				qWarning() << "Could not get device serial number.";
+				throw std::runtime_error("Could not get device serial number.");
 			// why is this always 0?
 			conf.serialNumber = (int)serialNumber;
 			// set up device parameters
@@ -291,7 +339,14 @@ void MainWindow::toggleRecording() {
 				setup.nChannelList[c] = c + (conf.usePolyBox ? -8 : 0);
 			setup.nPoints = conf.chunkSize * downsampling_factor;
 			setup.nHoldValue = 0;
-			
+
+			USHORT amp_types[4];
+			if (!DeviceIoControl(m_hDevice, IOCTL_BA_AMPLIFIER_TYPE, nullptr, 0, amp_types,
+				sizeof(amp_types), &bytes_returned, nullptr))
+				throw std::runtime_error("Could not get amplifier type.");
+			USHORT amp_type = amp_types[0];
+			CheckAmpTypeAgainstConfig(amp_type, conf, ui->cbUseMRSettings->isChecked());
+
 			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nResolution[c] = conf.resolution;
 			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nDCCoupling[c] = conf.dcCoupling;
 			for (UCHAR c = 0; c < conf.channelCount; c++) setup.n250Hertz[c] = conf.useMRLowPass;
@@ -355,8 +410,8 @@ void MainWindow::toggleRecording() {
 
 // background data reader thread
 template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
-	const float unit_scales[] = {0.1f, 0.5f, 10.f, 152.6f};
-	const char *unit_strings[] = {"100 nV", "500 nV", "10 muV", "152.6 muV"};
+	const float unit_scales[] = {0.1f, 0.5f};
+	const char *unit_strings[] = {"100 nV", "500 nV"};
 	const bool sendRawStream = std::is_same<T, int16_t>::value;
 	// reserve buffers to receive and send data
 	unsigned int chunk_words = conf.chunkSize * (conf.channelCount + 1) * downsampling_factor;
@@ -508,8 +563,10 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 				mrkr ^= m_nPullDir;
 
 				if (m_bSampledMarkersEEG)
-					send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
-					//send_buffer_vec[s][conf.channelCount] = static_cast<T>(mrkr);//((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					if (sampling_rate != 5000)
+						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					else
+						send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
 					
 
 				if (m_bUnsampledMarkers)
@@ -517,8 +574,11 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 					if (mrkr != prev_mrkr)
 					{
 						s_mrkr = std::to_string((int)mrkr);
-						int num = nOutBufferSampleCtr + 1 - conf.chunkSize;
-						//int num = s + 1 - conf.chunkSize;
+						int num = 1;
+						if(sampling_rate != 5000)
+							num = nOutBufferSampleCtr + 1 - conf.chunkSize;
+						else
+							num = s + 1 - conf.chunkSize;
 						double dNum = (double)num;
 						double ts = dNum / sampling_rate;
 						marker_outlet->push_sample(&s_mrkr, now + ts);

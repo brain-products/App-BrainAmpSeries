@@ -12,6 +12,8 @@ using HANDLE = void *;
 using ULONG = unsigned long;
 #endif
 
+
+
 struct ReaderConfig 
 {
 	int deviceNumber;
@@ -21,6 +23,8 @@ struct ReaderConfig
 	std::vector<std::string> channelLabels;
 	int useMRLowPass;
 };
+
+
 
 struct t_AppVersion
 {
@@ -47,10 +51,12 @@ private slots:
 	void UpdateChannelLabels();
 	void UpdateChannelLabelsGUI(int);
 	void setSamplingRate();
+	void MRSettingsToggled(int);
 
 private:
 	// function for loading / saving the config file
 	QString find_config_file(const char *filename);
+	void CheckAmpTypeAgainstConfig(USHORT ampType, ReaderConfig config, bool useMRSettings);
 	// background data reader thread
 	template <typename T>
 	void read_thread(const ReaderConfig config);
