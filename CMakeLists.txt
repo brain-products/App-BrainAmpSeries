@@ -128,6 +128,11 @@ install(FILES ${PROJECT_NAME}.cfg
 	COMPONENT "${PROJECT_NAME}"
 )
 
+install(FILES explanation_of_trigger_marker_types.pdf
+	DESTINATION ${PROJECT_NAME}
+	COMPONENT "${PROJECT_NAME}"
+)
+
 addQtDeployToInstall(${PROJECT_NAME})
 
 if (WIN32)

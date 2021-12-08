@@ -160,7 +160,11 @@ PO10 </string>
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QComboBox" name="cbSamplingRate"/>
+          <widget class="QComboBox" name="cbSamplingRate">
+           <property name="toolTip">
+            <string>To stay consistent with recorder, this app can downsample by a factor of 1, 2, 5, 10, 20, 25. or 50, resulting in a nominal sampling rate of 5000, 2500, 1000, 500, 250, 200, or 100Hz respectively.</string>
+           </property>
+          </widget>
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_3">
@@ -172,7 +176,8 @@ PO10 </string>
          <item row="5" column="1">
           <widget class="QComboBox" name="impedanceMode">
            <property name="toolTip">
-            <string>The default setting is to operate in high-impedance mode (less need for perfect electrode contact)</string>
+            <string>
+For most applications it is recommended to leave the Impedance Mode and DC coupling options at their defaults (High and AC respectively).</string>
            </property>
            <item>
             <property name="text">
@@ -196,7 +201,7 @@ PO10 </string>
          <item row="6" column="1">
           <widget class="QComboBox" name="resolution">
            <property name="toolTip">
-            <string>Resolution of the measured signal</string>
+            <string>Desired LSB value for digital signals. Note BrainAmp MR devices only support 5 nanovolt resolution.</string>
            </property>
            <item>
             <property name="text">
@@ -236,6 +241,9 @@ PO10 </string>
          </item>
          <item row="10" column="0" colspan="2">
           <widget class="QCheckBox" name="sendRawStream">
+           <property name="toolTip">
+            <string>The hardware itself sends raw data that is encoded as 16-bit integers. These values must be converted into floating point values corresponding to the actually measured microvoltages at the electrodes. If checked, the LSL stream outlet will send the BrainAmp's raw data. If not, it will convert the data appropriately.</string>
+           </property>
            <property name="text">
             <string>Send Raw Stream (int16_t)</string>
            </property>
@@ -243,6 +251,10 @@ PO10 </string>
          </item>
          <item row="8" column="1">
           <widget class="QComboBox" name="hwFilter">
+           <property name="toolTip">
+            <string>
+This is an optional lowpass filter executed at the hardware level. For MR recordings it is important to choose 250 Hz.</string>
+           </property>
            <property name="editable">
             <bool>false</bool>
            </property>
@@ -283,6 +295,9 @@ PO10 </string>
          </item>
          <item row="3" column="0">
           <widget class="QCheckBox" name="cbUseMRSettings">
+           <property name="toolTip">
+            <string>For recordings done in the MR scanner (BrainAmpMR and BrainAmpMRplus only), checking this box will automatically choose the recommended settings for use in the scanner.</string>
+           </property>
            <property name="text">
             <string>Use MR Settings</string>
            </property>
@@ -322,6 +337,9 @@ PO10 </string>
          </item>
          <item row="4" column="1">
           <widget class="QCheckBox" name="sampledMarkersEEG">
+           <property name="toolTip">
+            <string>See 'explanation_of_trigger_marker_types.pdf'. </string>
+           </property>
            <property name="layoutDirection">
             <enum>Qt::LeftToRight</enum>
            </property>
@@ -339,6 +357,9 @@ PO10 </string>
          </item>
          <item row="1" column="1">
           <widget class="QCheckBox" name="unsampledMarkers">
+           <property name="toolTip">
+            <string>See 'explanation_of_trigger_marker_types.pdf'. </string>
+           </property>
            <property name="layoutDirection">
             <enum>Qt::LeftToRight</enum>
            </property>
