@@ -1,3 +1,7 @@
+BrainAmpSeries Connector v.1.16.1
+-bugfix: added Hz to sample rate field in GUI
+-bugfix: changed 5nV to 500nV in recommended MR settings
+
 BrainAmpSeries Connector v.1.16.0
 -feature: MR settings check box
 -feature: check settings against amplifier type to ensure compatiblity

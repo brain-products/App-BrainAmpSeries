@@ -48,7 +48,7 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
 
 ### Resolution
 
-Desired LSB value for digital signals. Note BrainAmp MR devices only support 5 nanovolt resolution.
+Desired LSB value for digital signals. Note BrainAmp MR devices only support 500 nanovolt resolution.
 
 ### DC Coupling
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>562</width>
-    <height>496</height>
+    <height>497</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -155,7 +155,7 @@ PO10 </string>
          <item row="4" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Sampling Rate</string>
+            <string>Sampling Rate (Hz)</string>
            </property>
           </widget>
          </item>
@@ -194,23 +194,23 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
          <item row="6" column="0">
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Resolution</string>
+            <string>Resolution (nV)</string>
            </property>
           </widget>
          </item>
          <item row="6" column="1">
           <widget class="QComboBox" name="resolution">
            <property name="toolTip">
-            <string>Desired LSB value for digital signals. Note BrainAmp MR devices only support 5 nanovolt resolution.</string>
+            <string>Desired LSB value for digital signals. Note BrainAmp MR devices only support 500 nanovolt resolution.</string>
            </property>
            <item>
             <property name="text">
-             <string>100 nV</string>
+             <string>100</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>500 nV</string>
+             <string>500</string>
             </property>
            </item>
           </widget>
@@ -263,12 +263,12 @@ This is an optional lowpass filter executed at the hardware level. For MR record
            </property>
            <item>
             <property name="text">
-             <string>1000 Hz</string>
+             <string>1000</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>250 Hz</string>
+             <string>250</string>
             </property>
            </item>
           </widget>
@@ -289,7 +289,7 @@ This is an optional lowpass filter executed at the hardware level. For MR record
          <item row="8" column="0">
           <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Hardware Filter</string>
+            <string>Hardware Filter (Hz)</string>
            </property>
           </widget>
          </item>
