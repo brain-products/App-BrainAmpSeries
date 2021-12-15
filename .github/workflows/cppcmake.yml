@@ -11,7 +11,7 @@ env:
   LSL_TAG: '1.13.0-b13'
   LSL_RELEASE: '1.13.0'
   LSL_RELEASE_SUFFIX: ''
-  APP_VERSION: 'v1.16.0'
+  APP_VERSION: 'v1.16.1b'
 
 jobs:
   build:

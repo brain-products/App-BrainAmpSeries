@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 
 	m_AppVersion.Major = 1;
 	m_AppVersion.Minor = 16;
-	m_AppVersion.Bugfix = 0;
+	m_AppVersion.Bugfix = 1;
 	m_bOverrideAutoUpdate = false;
 
 	// make GUI connections
