@@ -71,8 +71,10 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2-preview
       with:
-        name: pkg-BrainAmp-v1.15.1-${{ matrix.platform }}
-        path: build/*.7z
+        name: pkg-${{ matrix.platform }}
+        path: |
+            build/*.zip
+            build/*.exe
 
     
     
