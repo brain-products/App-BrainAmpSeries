@@ -687,10 +687,10 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 				mrkr ^= m_nPullDir;
 
 				if (m_bSampledMarkersEEG)
-					if (sampling_rate != 5000)
-						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
-					else
-						send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					// if (sampling_rate != 5000)
+						// send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					// else
+					send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
 					
 
 				if (m_bUnsampledMarkers)
