@@ -11,7 +11,7 @@ env:
   LSL_TAG: '1.13.0-b13'
   LSL_RELEASE: '1.13.0'
   LSL_RELEASE_SUFFIX: ''
-  APP_VERSION: 'v1.17.0b'
+  APP_VERSION: 'v1.17.0'
 
 jobs:
   build:
@@ -41,14 +41,14 @@ jobs:
     - name: Get LSL 32
       if: matrix.platform == 'Win32'
       run: |
-           Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win32.zip -o liblsl.7z
-           7z x liblsl.7z -oLSL
+           Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win32.zip -o liblsl.zip
+           7z x liblsl.zip -oLSL
     
     - name: Get LSL 64
       if: matrix.platform == 'Win64'
       run: |
-           Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.7z
-           7z x liblsl.7z -oLSL
+           Invoke-WebRequest -Uri https://github.com/sccn/liblsl/releases/download/1.13.1/liblsl-1.13.1-Win64.zip -o liblsl.zip
+           7z x liblsl.zip -oLSL
      
     - name: configure cmake 32
       if: matrix.platform == 'Win32'
