@@ -50,7 +50,7 @@ using CHAR = signed char;
 using UCHAR = unsigned char;
 #endif
 
-#include "BrainAmpIoCtl.h"
+
 
 const int sampling_rates[] = { 5000, 2500, 1000, 500, 250, 200, 100 };
 double sampling_rate = (double)sampling_rates[0];

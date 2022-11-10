@@ -3,7 +3,6 @@
 #include <QMainWindow>
 #include <atomic>
 #include <thread>
-
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -11,7 +10,7 @@
 using HANDLE = void *;
 using ULONG = unsigned long;
 #endif
-
+#include "BrainAmpIoCtl.h"
 
 
 struct ReaderConfig 
