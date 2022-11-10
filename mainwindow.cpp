@@ -68,8 +68,8 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 	ui->setupUi(this);
 
 	m_AppVersion.Major = 1;
-	m_AppVersion.Minor = 16;
-	m_AppVersion.Bugfix = 1;
+	m_AppVersion.Minor = 17;
+	m_AppVersion.Bugfix = 0;
 	m_bOverrideAutoUpdate = false;
 
 	// make GUI connections
@@ -188,7 +188,6 @@ int getSamplingRateIndex(int nSamplingRate)
 void MainWindow::load_config(const QString &filename) {
 	QSettings pt(filename, QSettings::IniFormat);
 
-	ui->deviceNumber->setValue(pt.value("settings/devicenumber", 1).toInt());
 	ui->channelCount->setValue(pt.value("settings/channelcount", 32).toInt());
 	ui->impedanceMode->setCurrentIndex(pt.value("settings/impedancemode", 0).toInt());
 	ui->cbSamplingRate->setCurrentIndex(getSamplingRateIndex(pt.value("settings/samplingrate", 500).toInt()));
@@ -199,7 +198,8 @@ void MainWindow::load_config(const QString &filename) {
 	ui->hwFilter->setCurrentIndex(pt.value("settings/hardwarefilter", 0).toInt());
 	ui->chunkSize->setValue(pt.value("settings/chunksize", 32).toInt());
 	ui->usePolyBox->setChecked(pt.value("settings/usepolybox", false).toBool());
-	ui->sendRawStream->setChecked(pt.value("settings/sendrawstream", false).toBool());
+	ui->useAuxChannels->setChecked(pt.value("settings/useauxchannels", false).toBool());
+	//ui->sendRawStream->setChecked(pt.value("settings/sendrawstream", false).toBool());
 	ui->unsampledMarkers->setChecked(pt.value("settings/unsampledmarkers", false).toBool());
 	ui->sampledMarkersEEG->setChecked(pt.value("settings/sampledmarkersEEG", false).toBool());
 	ui->channelLabels->setPlainText(pt.value("channels/labels").toStringList().join('\n'));
@@ -210,8 +210,6 @@ void MainWindow::save_config(const QString &filename) {
 
 	// transfer UI content into property tree
 	pt.beginGroup("settings");
-	pt.setValue("devicenumber", ui->deviceNumber->value());
-	pt.setValue("devicenumber", ui->deviceNumber->value());
 	pt.setValue("channelcount", ui->channelCount->value());
 	pt.setValue("usemr", ui->cbUseMRSettings->isChecked());
 	pt.setValue("samplingrate", ui->cbSamplingRate->currentText());
@@ -221,7 +219,8 @@ void MainWindow::save_config(const QString &filename) {
 	pt.setValue("hardwarefilter", ui->hwFilter->currentIndex());
 	pt.setValue("chunksize", ui->chunkSize->value());
 	pt.setValue("usepolybox", ui->usePolyBox->isChecked());
-	pt.setValue("sendrawstream", ui->sendRawStream->isChecked());
+	pt.setValue("useauxchannels", ui->useAuxChannels->isChecked());
+	//pt.setValue("sendrawstream", ui->sendRawStream->isChecked());
 	pt.setValue("unsampledmarkers", ui->unsampledMarkers->isChecked());
 	pt.setValue("sampledmarkersEEG", ui->sampledMarkersEEG->isChecked());
 	pt.endGroup();
@@ -238,27 +237,157 @@ void MainWindow::closeEvent(QCloseEvent *ev) {
 	}
 }
 
-void MainWindow::CheckAmpTypeAgainstConfig(USHORT ampType, ReaderConfig config, bool useMRSettings)
+void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, ReaderConfig conf)
 {
+	int nChannels = 0;
+	bool bHasMR, bHasExG16, bHasPoly, bHasDC = false;
+	for (int i = 0; i < 4; i++)
+	{
+		switch (ampTypes[i])
+		{
+		case 0:
+			break;
+		case 1:
+			nChannels += 32;
+			break;
+		case 2:
+			nChannels += 32;
+			bHasMR = true;
+			break;
+		case 3:
+			nChannels += 32;
+			bHasDC = true;
+			break;
+		case 4:
+			nChannels += 8;
+			break;
+		case 5:
+			nChannels += 16;
+			bHasExG16 = true;
+			break;
+		case 6:
+			bHasPoly = true;
+			break;
+		}
+	}
+	if (nChannels != conf.channelCount)
+		throw std::runtime_error(std::string("Channel count does not match available channels on device: " + nChannels));
+	if (!bHasDC)
+	{
+		if (conf.dcCoupling)
+			throw std::runtime_error("DC Coupling not supported on this device.");
+		if(conf.lowImpedanceMode)
+			throw std::runtime_error("Low Impedance Mode not supported on this device.");
+	}
+	if (bHasDC || bHasMR)
+	{
+		if (conf.resolution == 0)
+			throw std::runtime_error("100 nanoVolt Resolution not supported by this device.");
+	}
+	if (!bHasPoly)
+		if (conf.usePolyBox)
+			throw std::runtime_error("No polybox found. Please check device or uncheck Use PolyBox option.");
 
-	// check MR settings
-	if (ampType == 1 || ampType==2)
+	// set resolutions based on amp types and settings
+	SetResolutions(setup, ampTypes, conf.resolution, conf.useAuxChannels);
+	// set dc coupling based on amp types and settings
+	SetDCCoupling(setup, ampTypes, conf.dcCoupling);
+	// set mr lowpass based on amp types and settings
+	SetLowPass(setup, ampTypes, conf.useMRLowPass);
+	setup->nLowImpedance = conf.lowImpedanceMode;
+}
+
+void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels)
+{
+	UCHAR c = 0;
+	for (int j = 0; j < 4; j++)
 	{
-		if (config.dcCoupling == true)
-			throw std::runtime_error("DC Coupling not supported by this amplifier type.");
-		if (config.lowImpedanceMode == true)
-			throw std::runtime_error("Low Impedance Mode not supported by this amplifier type.");
+		switch (ampTypes[j])
+		{
+		case 0:
+			break;
+		case 1:
+		case 2:
+		case 3:
+			for (int i = 0; i < 32; i++)
+				setup->nResolution[c++] = resolution;
+			break;
+		case 4:
+			for (int i = 0; i < 8; i++)
+				setup->nResolution[c++] = resolution;
+			break;
+		case 5:
+			for (int i = 0; i < 16; i++)
+				setup->nResolution[c++] = (useAuxChannels && i>7)? 123 : resolution;
+			break;
+		case 6:
+			break;
+		}
 	}
-	// check MR settings
-	if (ampType == 2)
+}
+
+void MainWindow::SetDCCoupling(BA_SETUP* setup, USHORT* ampTypes, bool dcCoupling)
+{
+	UCHAR c = 0;
+	for (int j = 0; j < 4; j++)
 	{
-		if (config.resolution == 0)
-			throw std::runtime_error("100 nanoVolt Resolution not supported by this amplifier type.");
+		switch (ampTypes[j])
+		{
+		case 0:
+			break;
+		case 1:
+		case 2:
+			for (int i = 0; i < 32; i++)
+				setup->nDCCoupling[c++] = false;
+			break;
+		case 3:
+			for (int i = 0; i < 32; i++)
+				setup->nDCCoupling[c++] = dcCoupling;
+			break;
+		case 4:
+			for (int i = 0; i < 8; i++)
+				setup->nDCCoupling[c++] = false;
+			break;
+		case 5:
+			for (int i = 0; i < 16; i++)
+				setup->nDCCoupling[c++] = false;
+			break;
+		case 6:
+			break;
+		}
 	}
-	if(useMRSettings)
-		if(ampType==1)
-			QMessageBox(QMessageBox::Warning, "Possible Settings/Amplifier type mismatch",
-				QStringLiteral("Use MR Settings is checked, but amplifier type is not MR or MRplus"), QMessageBox::Ok, this);
+}
+
+void MainWindow::SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass)
+{
+	UCHAR c = 0;
+	for (int j = 0; j < 4; j++)
+	{
+		switch (ampTypes[j])
+		{
+		case 0:
+			break;
+		case 1:
+			for (int i = 0; i < 32; i++)
+				setup->n250Hertz[c] = false;
+			break;
+		case 2:
+		case 3:
+			for (int i = 0; i < 32; i++)
+				setup->n250Hertz[c] = useMRLowPass;
+			break;
+		case 4:
+			for (int i = 0; i < 8; i++)
+				setup->nDCCoupling[c++] = false;
+			break;
+		case 5:
+			for (int i = 0; i < 16; i++)
+				setup->nDCCoupling[c++] = false;
+			break;
+		case 6:
+			break;
+		}
+	}
 }
 
 // start/stop the BrainAmpSeries connection
@@ -295,15 +424,15 @@ void MainWindow::toggleRecording() {
 			// get the UI parameters...
 			setSamplingRate();
 			ReaderConfig conf;
-			conf.deviceNumber = ui->deviceNumber->value();
 			conf.channelCount = static_cast<unsigned int>(ui->channelCount->value());
 			conf.lowImpedanceMode = ui->impedanceMode->currentIndex() == 1;
 			conf.resolution = static_cast<ReaderConfig::Resolution>(ui->resolution->currentIndex());
 			conf.dcCoupling = static_cast<unsigned char>(ui->dcCoupling->currentIndex());
 			conf.chunkSize = ui->chunkSize->value();
 			conf.usePolyBox = ui->usePolyBox->checkState() == Qt::Checked;
+			conf.useAuxChannels = ui->useAuxChannels->checkState() == Qt::Checked;
 			conf.useMRLowPass = ui->hwFilter->currentIndex();; // default, check later if it is brai
-			bool sendRawStream = ui->sendRawStream->isChecked();
+			//bool sendRawStream = ui->sendRawStream->isChecked();
 
 			m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
 			
@@ -344,13 +473,8 @@ void MainWindow::toggleRecording() {
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_AMPLIFIER_TYPE, nullptr, 0, amp_types,
 				sizeof(amp_types), &bytes_returned, nullptr))
 				throw std::runtime_error("Could not get amplifier type.");
-			USHORT amp_type = amp_types[0];
-			CheckAmpTypeAgainstConfig(amp_type, conf, ui->cbUseMRSettings->isChecked());
-
-			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nResolution[c] = conf.resolution;
-			for (UCHAR c = 0; c < conf.channelCount; c++) setup.nDCCoupling[c] = conf.dcCoupling;
-			for (UCHAR c = 0; c < conf.channelCount; c++) setup.n250Hertz[c] = conf.useMRLowPass;
-			setup.nLowImpedance = conf.lowImpedanceMode;
+			
+			CheckAmpTypeAgainstConfig(&setup, amp_types, conf);
 
 			m_bPullUpHiBits = true;
 			m_bPullUpLowBits = false;
@@ -371,8 +495,8 @@ void MainWindow::toggleRecording() {
 
 			// start reader thread
 			shutdown = false;
-			auto function_handle =
-				sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
+			auto function_handle = &MainWindow::read_thread<float>;
+				//sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
 			reader.reset(new std::thread(function_handle, this, conf));
 		}
 
@@ -504,7 +628,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 
 		// enter transmission loop
 		DWORD bytes_read;
-		const T scale = .5;// std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
+		const T scale = std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
 
 		while (!shutdown) {
 			// read chunk into recv_buffer

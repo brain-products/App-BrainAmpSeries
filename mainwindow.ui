@@ -84,33 +84,13 @@ PO10 </string>
           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
          </property>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Device Number</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QSpinBox" name="deviceNumber">
-           <property name="toolTip">
-            <string>The number of the USB device (if multiple); the first one is #1.</string>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>256</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Number of Channels</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="0" column="1">
           <widget class="QSpinBox" name="channelCount">
            <property name="toolTip">
             <string>This must match the number of entries in the channel list</string>
@@ -129,14 +109,14 @@ PO10 </string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="1" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
             <string>Chunk Size</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
+         <item row="1" column="1">
           <widget class="QSpinBox" name="chunkSize">
            <property name="toolTip">
             <string>The number of samples per chunk emitted by the driver -- a small value will lead to lower overall latency but causes more CPU load</string>
@@ -152,28 +132,38 @@ PO10 </string>
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="cbUseMRSettings">
+           <property name="toolTip">
+            <string>For recordings done in the MR scanner (BrainAmpMR and BrainAmpMRplus only), checking this box will automatically choose the recommended settings for use in the scanner.</string>
+           </property>
+           <property name="text">
+            <string>Use MR Settings</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
             <string>Sampling Rate (Hz)</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="3" column="1">
           <widget class="QComboBox" name="cbSamplingRate">
            <property name="toolTip">
             <string>To stay consistent with recorder, this app can downsample by a factor of 1, 2, 5, 10, 20, 25. or 50, resulting in a nominal sampling rate of 5000, 2500, 1000, 500, 250, 200, or 100Hz respectively.</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
             <string>Impedance Mode</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
+         <item row="4" column="1">
           <widget class="QComboBox" name="impedanceMode">
            <property name="toolTip">
             <string>
@@ -191,14 +181,14 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
            </item>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="label_5">
            <property name="text">
             <string>Resolution (nV)</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
+         <item row="5" column="1">
           <widget class="QComboBox" name="resolution">
            <property name="toolTip">
             <string>Desired LSB value for digital signals. Note BrainAmp MR devices only support 500 nanovolt resolution.</string>
@@ -215,14 +205,14 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
            </item>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="6" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>DC Coupling</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
+         <item row="6" column="1">
           <widget class="QComboBox" name="dcCoupling">
            <property name="toolTip">
             <string>The default is AC</string>
@@ -239,17 +229,14 @@ For most applications it is recommended to leave the Impedance Mode and DC coupl
            </item>
           </widget>
          </item>
-         <item row="10" column="0" colspan="2">
-          <widget class="QCheckBox" name="sendRawStream">
-           <property name="toolTip">
-            <string>The hardware itself sends raw data that is encoded as 16-bit integers. These values must be converted into floating point values corresponding to the actually measured microvoltages at the electrodes. If checked, the LSL stream outlet will send the BrainAmp's raw data. If not, it will convert the data appropriately.</string>
-           </property>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Send Raw Stream (int16_t)</string>
+            <string>Hardware Filter (Hz)</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
+         <item row="7" column="1">
           <widget class="QComboBox" name="hwFilter">
            <property name="toolTip">
             <string>
@@ -273,7 +260,7 @@ This is an optional lowpass filter executed at the hardware level. For MR record
            </item>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="8" column="0">
           <widget class="QCheckBox" name="usePolyBox">
            <property name="enabled">
             <bool>true</bool>
@@ -286,20 +273,10 @@ This is an optional lowpass filter executed at the hardware level. For MR record
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_10">
+         <item row="9" column="0">
+          <widget class="QCheckBox" name="useAuxChannels">
            <property name="text">
-            <string>Hardware Filter (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="cbUseMRSettings">
-           <property name="toolTip">
-            <string>For recordings done in the MR scanner (BrainAmpMR and BrainAmpMRplus only), checking this box will automatically choose the recommended settings for use in the scanner.</string>
-           </property>
-           <property name="text">
-            <string>Use MR Settings</string>
+            <string>Use AUX Channels (ExG only)</string>
            </property>
           </widget>
          </item>
@@ -457,7 +434,6 @@ This is an optional lowpass filter executed at the hardware level. For MR record
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
   <tabstop>channelLabels</tabstop>
-  <tabstop>deviceNumber</tabstop>
   <tabstop>channelCount</tabstop>
   <tabstop>chunkSize</tabstop>
   <tabstop>impedanceMode</tabstop>

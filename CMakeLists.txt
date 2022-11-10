@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.17)
 
 set(PROJECT_VERSION_MAJOR 1)
-set(PROJECT_VERSION_MINOR 16)
-set(PROJECT_VERSION_PATCH 1)
+set(PROJECT_VERSION_MINOR 17)
+set(PROJECT_VERSION_PATCH 0)
 
 project(BrainAmpSeries
 	LANGUAGES CXX
@@ -39,9 +39,17 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()	
 
+set(lsl_DIR ${CMAKE_CURRENT_LIST_DIR}/LSL/lib/cmake/LSL)
+
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Threads REQUIRED)
-find_package(lsl REQUIRED)
+find_package(lsl REQUIRED
+	HINTS ${LSL_INSTALL_ROOT}
+	"${CMAKE_CURRENT_LIST_DIR}/../../LSL/liblsl/build/"
+	"${CMAKE_CURRENT_LIST_DIR}/../../LSL/liblsl/build/install"
+	"${CMAKE_CURRENT_LIST_DIR}/../../LSL/liblsl/out/build/x64-Release"
+	"${CMAKE_CURRENT_LIST_DIR}/../../LSL/liblsl/out/install/x64-Release"
+	PATH_SUFFIXES share/LSL)
 
 add_executable(${PROJECT_NAME} WIN32
 	downsampler.cpp

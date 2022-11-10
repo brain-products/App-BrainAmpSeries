@@ -1,3 +1,12 @@
+BrainAmpSeries Connector v.1.17.0
+-feature: add support for ExG aux channels (still in beta)
+-feature: remove raw streaming data option
+-feature: remove device counter
+-feature: check GUI settings against possible amplifier configuration before connnecting
+
+BrainAmpSeries Connector v.1.16.2
+-bugfix: incorrect sample marker values
+
 BrainAmpSeries Connector v.1.16.1
 -bugfix: added Hz to sample rate field in GUI
 -bugfix: changed 5nV to 500nV in recommended MR settings

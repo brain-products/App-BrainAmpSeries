@@ -39,12 +39,15 @@ endif()
 
 #--------------------------------------------------------------------------
 # Windows specific
+# needed for wix handling of custom install dir
+set(INSTALL_DIR ${CMAKE_PACKAGE_INSTALL_DIRECTORY})
 list(APPEND CPACK_GENERATOR ZIP)
 message(STATUS "Package generation - Windows")
 message(STATUS "   + ZIP                                  YES ")
 
 set(PACKAGE_ICON "${CMAKE_SOURCE_DIR}/Resources/BV_LSL.ico")
-set(PREFERRED_INSTALL_DIR "C:\\\\Vision\\\\LSL-Apps")
+set(INSTALLER_HEADER "${CMAKE_SOURCE_DIR}/Resources/BV_LSL.ico")
+set(PREFERRED_INSTALL_DIR "C:\\\\Vision\\\\LSL-Apps\\\\")
 # NSIS windows installer
 find_program(NSIS_PATH nsis PATH_SUFFIXES nsis)
 if(NSIS_PATH)
@@ -54,15 +57,35 @@ if(NSIS_PATH)
 	set(CPACK_NSIS_DISPLAY_NAME ${CPACK_PACKAGE_NAME})
 	# Icon of the installer
 	file(TO_CMAKE_PATH "${PACKAGE_ICON}" CPACK_NSIS_MUI_ICON)
-	file(TO_CMAKE_PATH "${PACKAGE_ICON}" CPACK_NSIS_MUI_HEADERIMAGE_BITMAP)
+	file(TO_CMAKE_PATH "${PACKAGE_ICON}" CPACK_NSIS_MUI_UNIICON)
+	file(TO_CMAKE_PATH "${INSTALLER_HEADER}" CPACK_NSIS_MUI_HEADERIMAGE_BITMAP)
+	file(TO_CMAKE_PATH "${INSTALLER_HEADER}" CPACK_NSIS_MUI_WELCOMEFINISH_BITMAP)
+	message(STATUS dir:  " ${PREFERRED_INSTALL_DIR}${INSTALL_DIR}\\BrainAmpSeries.exe")
+	set(CPACK_NSIS_INSTALLED_ICON_NAME "\\\\bin\\\\BrainAmpSeries.exe")
 	set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
 	set(CPACK_NSIS_INSTALL_ROOT "${PREFERRED_INSTALL_DIR}" )
+	set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 	set(CPACK_NSIS_MODIFY_PATH ON)
 	set(CPACK_CREATE_DESKTOP_LINKS "${PROJECT_NAME}.exe")
+	set(CPACK_NSIS_BRANDING_TEXT "Copyright Brain Products 2021")
 else()
 	message(STATUS "   + NSIS                                 NO ")
 endif()
 
+# WIX windows installer
+# find_program(WIX_PATH wix PATH_SUFFIXES wix)
+# if(WIX_PATH)
+	#list(APPEND CPACK_GENERATOR WIX)
+	#message(STATUS "   + WIX                                 YES ")
+	#file(TO_CMAKE_PATH "${PACKAGE_ICON}" CPACK_WIX_PRODUCT_ICON)
+	#set(CMAKE_PACKAGE_INSTALL_DIRECTORY #"${PREFERRED_INSTALL_DIR}${CMAKE_PACKAGE_INSTALL_DIRECTORY}")
+	#set(CPACK_WIX_SKIP_PROGRAM_FOLDER TRUE)
+	
+# else()
+	# message(STATUS "   + WIX                                 NO ")
+# endif()
+# reset the package install dir for nuget
+set(CMAKE_PACKAGE_INSTALL_DIRECTORY "${INSTALL_DIR}")
 
 # NuGet package
 # find_program(NUGET_EXECUTABLE nuget)
