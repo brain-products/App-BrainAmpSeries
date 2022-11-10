@@ -2,6 +2,7 @@ BrainAmpSeries/.vs/
 BrainAmpSeries/bin/
 BrainAmpSeries/Debug/
 BrainAmpSeries/Release/
+LSL/
 /build*/
 *.dll
 *.exe
