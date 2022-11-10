@@ -52,7 +52,6 @@ find_package(lsl REQUIRED
 	PATH_SUFFIXES share/LSL)
 
 add_executable(${PROJECT_NAME} WIN32
-	downsampler.cpp
 	downsampler.h
 	main.cpp
 	mainwindow.cpp
