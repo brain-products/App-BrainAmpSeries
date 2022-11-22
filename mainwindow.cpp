@@ -12,9 +12,6 @@
 #include <iostream>
 #include <sstream>
 
-
-
-
 #ifdef WIN32
 #include <winioctl.h>
 #else
@@ -51,7 +48,7 @@ using UCHAR = unsigned char;
 #endif
 
 
-
+const double PRESCALE_EXGAUX_FACTOR = 20.5575;
 const int sampling_rates[] = { 5000, 2500, 1000, 500, 250, 200, 100 };
 double sampling_rate = (double)sampling_rates[0];
 const int downsampling_factors[] = { 1, 2, 5, 10, 20, 25, 50 };
@@ -299,6 +296,7 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 
 void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels)
 {
+	m_vnAuxChannelMap.clear();
 	UCHAR c = 0;
 	for (int j = 0; j < 4; j++)
 	{
@@ -318,7 +316,10 @@ void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resol
 			break;
 		case 5:
 			for (int i = 0; i < 16; i++)
-				setup->nResolution[c++] = (useAuxChannels && i>7)? 123 : resolution;
+			{
+				m_vnAuxChannelMap.push_back(c);
+				setup->nResolution[c++] = (useAuxChannels && i > 7) ? 2 : resolution;
+			}
 			break;
 		case 6:
 			break;
@@ -388,6 +389,15 @@ void MainWindow::SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass
 			break;
 		}
 	}
+}
+
+bool MainWindow::IsAuxChannel(int c)
+{
+	for (auto& it : m_vnAuxChannelMap)
+	{
+		if (it == c)return true;
+	}
+	return false;
 }
 
 // start/stop the BrainAmpSeries connection
@@ -576,17 +586,22 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		lsl::xml_element channels = data_info.desc().append_child("channels");
 		std::string postprocessing_factor =
 			sendRawStream ? std::to_string(unit_scales[conf.resolution]) : "1";
-		for (const auto &channelLabel : conf.channelLabels)
+		int c = 0;
+		for (const auto& channelLabel : conf.channelLabels)
+		{
 			channels.append_child("channel")
 				.append_child_value("label", channelLabel)
 				.append_child_value("type", "EEG")
 				.append_child_value("unit", "microvolts")
-				.append_child_value("scaling_factor", postprocessing_factor);
+				.append_child_value("scaling_factor", (IsAuxChannel(c))? :  postprocessing_factor);
+			c++;
+		}
 		if (m_bSampledMarkersEEG) {
 			channels.append_child("channel")
 				.append_child_value("label", "triggerStream")
 				.append_child_value("type", "EEG")
 				.append_child_value("unit", "code");
+			
 		}
 
 		data_info.desc()
@@ -629,7 +644,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		// enter transmission loop
 		DWORD bytes_read;
 		const T scale = std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
-
+		const T aux_scale = std::is_same<T, float>::value ? 10.0 * PRESCALE_EXGAUX_FACTOR : 1;
 		while (!shutdown) {
 			// read chunk into recv_buffer
 			if (!ReadFile(m_hDevice, &recv_buffer[0], (int)2 * chunk_words, &bytes_read, nullptr))

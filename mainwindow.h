@@ -55,10 +55,11 @@ private slots:
 private:
 	// function for loading / saving the config file
 	QString find_config_file(const char *filename);
-	static void CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, ReaderConfig config);
-	static void SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels);
-	static void SetDCCoupling(BA_SETUP* setup, USHORT* ampTypes, bool dcCoupling);
-	static void SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass);
+	void CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, ReaderConfig config);
+	void SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels);
+	void SetDCCoupling(BA_SETUP* setup, USHORT* ampTypes, bool dcCoupling);
+	void SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass);
+	bool IsAuxChannel(int c);
 	// background data reader thread
 	template <typename T>
 	void read_thread(const ReaderConfig config);
@@ -78,6 +79,7 @@ private:
 	t_AppVersion m_AppVersion;
 	Ui::MainWindow *ui;
 	std::atomic<bool> shutdown{false}; // flag indicating whether the recording thread should quit
+	std::vector<int> m_vnAuxChannelMap;
 };
 
 #endif // MAINWINDOW_H
