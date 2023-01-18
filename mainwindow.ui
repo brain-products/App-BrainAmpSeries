@@ -275,8 +275,14 @@ This is an optional lowpass filter executed at the hardware level. For MR record
          </item>
          <item row="9" column="0">
           <widget class="QCheckBox" name="useAuxChannels">
+           <property name="toolTip">
+            <string>Checking this will configure the Brain Amp ExG channels 9-16 to record in AUX mode. Leave it unchecked if all 16 sensors are bipolar. Please see the documnt 'using_gsr_sensors.txt' for information on how to post-process ExG sensors from Brain Proudcts.</string>
+           </property>
+           <property name="toolTipDuration">
+            <number>-1</number>
+           </property>
            <property name="text">
-            <string>Use AUX Channels (ExG only)</string>
+            <string>Use AUX Channels (ExG 9-16 only)</string>
            </property>
           </widget>
          </item>

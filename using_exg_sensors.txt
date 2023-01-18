@@ -1,0 +1,5 @@
+Please note that all AUX sensor values are represented in µV.
+If you want to convert the voltage to sensor-specific units, you have to apply gradients and offsets as listed in the Brain Products sensor tutorial (https://www.brainproducts.com/files/public/sensor-tutorial/Content/Topics/Intended_Use.htm).
+For recordings in MR environment, please consider additional aspects that need to be adhered to.
+In addition, use the following correction formula for the GSR MR sensor after applying the gradient (converting to µS):
+G=Gp*Gt/(Gp-Gt) with G as the corrected conductance in µS, Gp as the correction value = 100 µS, and Gt as the measured conductance (after the gradient has been applied).

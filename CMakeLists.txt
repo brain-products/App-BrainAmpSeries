@@ -88,6 +88,11 @@ install(FILES explanation_of_trigger_marker_types.pdf
 	DESTINATION bin
 	COMPONENT "${PROJECT_NAME}"
 )
+
+install(FILES using_exg_sensors.txt
+	DESTINATION bin
+	COMPONENT "${PROJECT_NAME}"
+)
 	
 # install(FILES $<TARGET_FILE:LSL::lsl>
 	# DESTINATION ${PROJECT_NAME}

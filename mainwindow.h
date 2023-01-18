@@ -15,12 +15,12 @@ using ULONG = unsigned long;
 
 struct ReaderConfig 
 {
-	int deviceNumber;
 	enum Resolution : uint8_t { V_100nV = 0, V_500nV = 1, V_10microV = 2, V_152microV = 3 } resolution;
 	bool dcCoupling, usePolyBox, useAuxChannels, lowImpedanceMode;
 	int chunkSize, channelCount, serialNumber;
 	std::vector<std::string> channelLabels;
 	int useMRLowPass;
+	
 };
 
 
@@ -56,6 +56,7 @@ private:
 	// function for loading / saving the config file
 	QString find_config_file(const char *filename);
 	void CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, ReaderConfig config);
+	void CheckGsrChannelsValidity(USHORT* ampTypes, ReaderConfig config);
 	void SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels);
 	void SetDCCoupling(BA_SETUP* setup, USHORT* ampTypes, bool dcCoupling);
 	void SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass);
@@ -79,7 +80,9 @@ private:
 	t_AppVersion m_AppVersion;
 	Ui::MainWindow *ui;
 	std::atomic<bool> shutdown{false}; // flag indicating whether the recording thread should quit
+	std::vector<int> m_vnExGChannelMap;
 	std::vector<int> m_vnAuxChannelMap;
+	std::vector<int> m_vnGsrChannelMap;
 };
 
 #endif // MAINWINDOW_H

@@ -34,12 +34,12 @@ inline int GetCurrentProcess() { return 0; }
 inline int SetPriorityClass(int, int) { return 0; }
 inline int CTL_CODE(int, int, int, int) { return 0; }
 inline void CloseHandle(HANDLE) {}
-inline bool DeviceIoControl(HANDLE, int, void *, int, void *, int, void *, void *) { return true; }
-inline HANDLE CreateFileA(const char *, int, int, void *, int, int, void *) {
-	return static_cast<void *>(&INVALID_HANDLE_VALUE);
+inline bool DeviceIoControl(HANDLE, int, void*, int, void*, int, void*, void*) { return true; }
+inline HANDLE CreateFileA(const char*, int, int, void*, int, int, void*) {
+	return static_cast<void*>(&INVALID_HANDLE_VALUE);
 }
 inline int32_t GetLastError() { return 0; }
-inline bool ReadFile(HANDLE, int16_t *, int, ulong *, void *) { return false; }
+inline bool ReadFile(HANDLE, int16_t*, int, ulong*, void*) { return false; }
 using DWORD = unsigned long;
 using USHORT = uint16_t;
 using ULONG = unsigned long;
@@ -53,14 +53,14 @@ const int sampling_rates[] = { 5000, 2500, 1000, 500, 250, 200, 100 };
 double sampling_rate = (double)sampling_rates[0];
 const int downsampling_factors[] = { 1, 2, 5, 10, 20, 25, 50 };
 int downsampling_factor = downsampling_factors[0];
-static const char *error_messages[] = {"No error.", "Loss lock.", "Low power.",
-	"Can't establish communication at start.", "Synchronisation error"};
+static const char* error_messages[] = { "No error.", "Loss lock.", "Low power.",
+	"Can't establish communication at start.", "Synchronisation error" };
 
 
 #define LSLVERSIONSTREAM(version) (version/100) << "." << (version%100)
 #define APPVERSIONSTREAM(version) version.Major << "." << version.Minor << "." << version.Bugfix
 
-MainWindow::MainWindow(QWidget *parent, const char *config_file)
+MainWindow::MainWindow(QWidget* parent, const char* config_file)
 	: QMainWindow(parent), ui(new Ui::MainWindow) {
 	ui->setupUi(this);
 
@@ -73,11 +73,11 @@ MainWindow::MainWindow(QWidget *parent, const char *config_file)
 	connect(ui->actionLoad_Configuration, &QAction::triggered, [this]() {
 		load_config(QFileDialog::getOpenFileName(
 			this, "Load Configuration File", "", "Configuration Files (*.cfg)"));
-	});
+		});
 	connect(ui->actionSave_Configuration, &QAction::triggered, [this]() {
 		save_config(QFileDialog::getSaveFileName(
 			this, "Save Configuration File", "", "Configuration Files (*.cfg)"));
-	});
+		});
 	connect(ui->cbSamplingRate, SIGNAL(currentIndexChanged(int)), this, SLOT(setSamplingRate()));
 	connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
 	connect(ui->linkButton, &QPushButton::clicked, this, &MainWindow::toggleRecording);
@@ -123,8 +123,6 @@ void MainWindow::UpdateChannelLabels()
 }
 void MainWindow::VersionsDialog()
 {
-
-
 	int32_t lslProtocolVersion = lsl::protocol_version();
 	int32_t lslLibVersion = lsl::library_version();
 	std::stringstream ss;
@@ -133,6 +131,7 @@ void MainWindow::VersionsDialog()
 		"App: " << APPVERSIONSTREAM(m_AppVersion);
 	QMessageBox::information(this, "Versions", ss.str().c_str(), QMessageBox::Ok);
 }
+
 void MainWindow::setSamplingRate()
 {
 	sampling_rate = sampling_rates[ui->cbSamplingRate->currentIndex()];
@@ -144,7 +143,7 @@ void MainWindow::MRSettingsToggled(int)
 	if (ui->cbUseMRSettings->isChecked())
 	{
 		ui->resolution->setCurrentIndex(1);
-		ui->resolution->setDisabled(true);		
+		ui->resolution->setDisabled(true);
 		ui->hwFilter->setCurrentIndex(1);
 		ui->hwFilter->setDisabled(true);
 		ui->cbSamplingRate->setCurrentIndex(0);
@@ -182,7 +181,7 @@ int getSamplingRateIndex(int nSamplingRate)
 	return 0;
 }
 
-void MainWindow::load_config(const QString &filename) {
+void MainWindow::load_config(const QString& filename) {
 	QSettings pt(filename, QSettings::IniFormat);
 
 	ui->channelCount->setValue(pt.value("settings/channelcount", 32).toInt());
@@ -202,7 +201,7 @@ void MainWindow::load_config(const QString &filename) {
 	ui->channelLabels->setPlainText(pt.value("channels/labels").toStringList().join('\n'));
 }
 
-void MainWindow::save_config(const QString &filename) {
+void MainWindow::save_config(const QString& filename) {
 	QSettings pt(filename, QSettings::IniFormat);
 
 	// transfer UI content into property tree
@@ -227,7 +226,7 @@ void MainWindow::save_config(const QString &filename) {
 	pt.endGroup();
 }
 
-void MainWindow::closeEvent(QCloseEvent *ev) {
+void MainWindow::closeEvent(QCloseEvent* ev) {
 	if (reader) {
 		QMessageBox::warning(this, "Recording still running", "Can't quit while recording");
 		ev->ignore();
@@ -236,8 +235,9 @@ void MainWindow::closeEvent(QCloseEvent *ev) {
 
 void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, ReaderConfig conf)
 {
+	std::string error_string = "";
 	int nChannels = 0;
-	bool bHasMR, bHasExG16, bHasPoly, bHasDC = false;
+	bool bHasMR = false, bHasExG16 = false, bHasPoly = false, bHasDC = false;
 	for (int i = 0; i < 4; i++)
 	{
 		switch (ampTypes[i])
@@ -257,10 +257,12 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 			break;
 		case 4:
 			nChannels += 8;
+			bHasDC = true;
 			break;
 		case 5:
 			nChannels += 16;
 			bHasExG16 = true;
+			bHasDC = true;
 			break;
 		case 6:
 			bHasPoly = true;
@@ -268,23 +270,35 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 		}
 	}
 	if (nChannels != conf.channelCount)
-		throw std::runtime_error(std::string("Channel count does not match available channels on device: " + nChannels));
+	{
+		error_string = ("Channel count does not match available channels on device: " + nChannels);
+		goto error_message;
+	}
 	if (!bHasDC)
 	{
 		if (conf.dcCoupling)
-			throw std::runtime_error("DC Coupling not supported on this device.");
-		if(conf.lowImpedanceMode)
-			throw std::runtime_error("Low Impedance Mode not supported on this device.");
+			error_string = "DC Coupling not supported on this device."; goto error_message;
+		if (conf.lowImpedanceMode)
+			error_string = "Low Impedance Mode not supported on this device."; goto error_message;
 	}
-	if (bHasDC || bHasMR)
-	{
-		if (conf.resolution == 0)
-			throw std::runtime_error("100 nanoVolt Resolution not supported by this device.");
-	}
+	//if (bHasDC || bHasMR)
+	//{
+	//	if (conf.resolution == 0)
+	//		throw std::runtime_error("100 nanoVolt Resolution not supported one or more connected devices.");
+	//}
 	if (!bHasPoly)
 		if (conf.usePolyBox)
-			throw std::runtime_error("No polybox found. Please check device or uncheck Use PolyBox option.");
+		{
+			error_string = "No polybox found. Please check device or uncheck Use PolyBox option.";
+			goto error_message;
+		}
+	if (!bHasExG16 && m_vnGsrChannelMap.size() != 0)
+	{
+		error_string = "Do not label channels with GSR or gsr unless ExG16 is attached.";
+		goto error_message;
+	}
 
+	CheckGsrChannelsValidity(ampTypes, conf);
 	// set resolutions based on amp types and settings
 	SetResolutions(setup, ampTypes, conf.resolution, conf.useAuxChannels);
 	// set dc coupling based on amp types and settings
@@ -292,10 +306,45 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 	// set mr lowpass based on amp types and settings
 	SetLowPass(setup, ampTypes, conf.useMRLowPass);
 	setup->nLowImpedance = conf.lowImpedanceMode;
+error_message:
+	QMessageBox::critical(this, "Error",
+		QString(("Error configuring BrainAmp device(s): " + error_string).c_str()),
+		QMessageBox::Ok);
+}
+
+void MainWindow::CheckGsrChannelsValidity(USHORT* ampTypes, ReaderConfig conf)
+{
+	int c = 0;
+	for (int j = 0; j < 4; j++)
+	{
+		switch (ampTypes[j])
+		{
+		case 0:
+			break;
+		case 1:
+		case 2:
+		case 3:
+			for (int i = 0; i < 32; i++)
+				c++;
+			break;
+		case 4:
+			for (int i = 0; i < 8; i++)
+				c++;
+			break;
+		case 5:
+			for (int i = 0; i < 8; i++)
+				c++;
+			break;
+		case 6:
+			break;
+		}
+	}
+	return;
 }
 
 void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resolution, bool useAuxChannels)
 {
+	m_vnExGChannelMap.clear();
 	m_vnAuxChannelMap.clear();
 	UCHAR c = 0;
 	for (int j = 0; j < 4; j++)
@@ -317,8 +366,10 @@ void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resol
 		case 5:
 			for (int i = 0; i < 16; i++)
 			{
-				m_vnAuxChannelMap.push_back(c);
-				setup->nResolution[c++] = (useAuxChannels && i > 7) ? 2 : resolution;
+				m_vnExGChannelMap.push_back(c);
+				setup->nResolution[c] = (useAuxChannels && (i > 7)) ? 2 : resolution;
+				if (i > 7)m_vnAuxChannelMap.push_back(c);
+				c++;
 			}
 			break;
 		case 6:
@@ -347,11 +398,11 @@ void MainWindow::SetDCCoupling(BA_SETUP* setup, USHORT* ampTypes, bool dcCouplin
 			break;
 		case 4:
 			for (int i = 0; i < 8; i++)
-				setup->nDCCoupling[c++] = false;
+				setup->nDCCoupling[c++] = dcCoupling;
 			break;
 		case 5:
 			for (int i = 0; i < 16; i++)
-				setup->nDCCoupling[c++] = false;
+				setup->nDCCoupling[c++] = dcCoupling;
 			break;
 		case 6:
 			break;
@@ -395,7 +446,8 @@ bool MainWindow::IsAuxChannel(int c)
 {
 	for (auto& it : m_vnAuxChannelMap)
 	{
-		if (it == c)return true;
+		if (it == c)
+			return true;
 	}
 	return false;
 }
@@ -416,7 +468,8 @@ void MainWindow::toggleRecording() {
 				CloseHandle(m_hDevice);
 				m_hDevice = nullptr;
 			}
-		} catch (std::exception &e) {
+		}
+		catch (std::exception& e) {
 			QMessageBox::critical(this, "Error",
 				QString("Could not stop the background processing: ") + e.what(), QMessageBox::Ok);
 			return;
@@ -427,7 +480,8 @@ void MainWindow::toggleRecording() {
 		ui->deviceSettingsGroup->setEnabled(true);
 		ui->triggerSettingsGroup->setEnabled(true);
 		ui->channelLabelsGroup->setEnabled(true);
-	} else {
+	}
+	else {
 		// === perform link action ===
 
 		try {
@@ -445,17 +499,27 @@ void MainWindow::toggleRecording() {
 			//bool sendRawStream = ui->sendRawStream->isChecked();
 
 			m_bUnsampledMarkers = ui->unsampledMarkers->checkState() == Qt::Checked;
-			
+
 			m_bSampledMarkersEEG = ui->sampledMarkersEEG->checkState() == Qt::Checked;
 
-			for (auto &label : ui->channelLabels->toPlainText().split('\n'))
+			int i = 0;
+			m_vnGsrChannelMap.clear();
+			for (auto& label : ui->channelLabels->toPlainText().split('\n'))
+			{
 				conf.channelLabels.push_back(label.toStdString());
+
+				if (label.toStdString().find("gsr") == 0)
+					m_vnGsrChannelMap.push_back(i);
+				else if (label.toStdString().find("GSR") == 0)
+					m_vnGsrChannelMap.push_back(i);
+				i++;
+			}
 			if (conf.channelLabels.size() != conf.channelCount)
 				throw std::runtime_error("The number of channels labels does not match the channel "
-										 "count device setting.");
+					"count device setting.");
 
 			// try to open the device
-			std::string deviceName = R"(\\.\BrainAmpUSB)" + std::to_string(conf.deviceNumber);
+			std::string deviceName = R"(\\.\BrainAmpUSB1)";
 			m_hDevice = CreateFileA(deviceName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr,
 				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
 			if (m_hDevice == INVALID_HANDLE_VALUE)
@@ -467,60 +531,60 @@ void MainWindow::toggleRecording() {
 			// get serial number
 			ULONG serialNumber = 0;
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_GET_SERIALNUMBER, nullptr, 0, &serialNumber,
-					sizeof(serialNumber), &bytes_returned, nullptr))
+				sizeof(serialNumber), &bytes_returned, nullptr))
 				throw std::runtime_error("Could not get device serial number.");
 			// why is this always 0?
 			conf.serialNumber = (int)serialNumber;
 			// set up device parameters
-			BA_SETUP setup = {0};
+			BA_SETUP setup = { 0 };
 			setup.nChannels = conf.channelCount;
 			for (unsigned char c = 0; c < conf.channelCount; c++)
 				setup.nChannelList[c] = c + (conf.usePolyBox ? -8 : 0);
 			setup.nPoints = conf.chunkSize * downsampling_factor;
 			setup.nHoldValue = 0;
 
-			USHORT amp_types[4];
+			USHORT amp_types[4] = { 0,0,0,0 };
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_AMPLIFIER_TYPE, nullptr, 0, amp_types,
 				sizeof(amp_types), &bytes_returned, nullptr))
 				throw std::runtime_error("Could not get amplifier type.");
-			
+
 			CheckAmpTypeAgainstConfig(&setup, amp_types, conf);
 
 			m_bPullUpHiBits = true;
 			m_bPullUpLowBits = false;
 			m_nPullDir = (m_bPullUpLowBits ? 0xff : 0) | (m_bPullUpHiBits ? 0xff00 : 0);
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_DIGITALINPUT_PULL_UP, &m_nPullDir,
-					sizeof(m_nPullDir), nullptr, 0, &bytes_returned, nullptr))
+				sizeof(m_nPullDir), nullptr, 0, &bytes_returned, nullptr))
 				throw std::runtime_error("Could not apply pull up/down parameter.");
 
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_SETUP, &setup, sizeof(setup), nullptr, 0,
-					&bytes_returned, nullptr))
+				&bytes_returned, nullptr))
 				throw std::runtime_error("Could not apply device setup parameters.");
 
 			// start recording
 			long acquire_eeg = 1;
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_START, &acquire_eeg, sizeof(acquire_eeg),
-					nullptr, 0, &bytes_returned, nullptr))
+				nullptr, 0, &bytes_returned, nullptr))
 				throw std::runtime_error("Could not start recording.");
 
 			// start reader thread
 			shutdown = false;
 			auto function_handle = &MainWindow::read_thread<float>;
-				//sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
+			//auto function_handle = sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
 			reader.reset(new std::thread(function_handle, this, conf));
 		}
 
-		catch (std::exception &e) {
+		catch (std::exception& e) {
 			// try to decode the error message
-			const char *msg = "Could not open USB device.";
+			const char* msg = "Could not open USB device.";
 			if (m_hDevice != nullptr) {
 				long error_code = 0;
 				if (DeviceIoControl(m_hDevice, IOCTL_BA_ERROR_STATE, nullptr, 0, &error_code,
-						sizeof(error_code), &bytes_returned, nullptr) &&
+					sizeof(error_code), &bytes_returned, nullptr) &&
 					bytes_returned)
 					msg = ((error_code & 0xFFFF) >= 0 && (error_code & 0xFFFF) <= 4)
-							  ? error_messages[error_code & 0xFFFF]
-							  : "Unknown error (your driver version might not yet be supported).";
+					? error_messages[uint(error_code & 0xFFFF)]
+					: "Unknown error (your driver version might not yet be supported).";
 				else
 					msg = "Could not retrieve error message because the device is closed";
 				CloseHandle(m_hDevice);
@@ -528,7 +592,7 @@ void MainWindow::toggleRecording() {
 			}
 			QMessageBox::critical(this, "Error",
 				QString("Could not initialize the BrainAmpSeries interface: ") + e.what() +
-					" (driver message: " + msg + ")",
+				" (driver message: " + msg + ")",
 				QMessageBox::Ok);
 			return;
 		}
@@ -544,15 +608,15 @@ void MainWindow::toggleRecording() {
 
 // background data reader thread
 template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
-	const float unit_scales[] = {0.1f, 0.5f};
-	const char *unit_strings[] = {"100 nV", "500 nV"};
+	const float unit_scales[] = { 0.1f, 0.5f };
+	const char* unit_strings[] = { "100 nV", "500 nV" };
 	const bool sendRawStream = std::is_same<T, int16_t>::value;
 	// reserve buffers to receive and send data
 	unsigned int chunk_words = conf.chunkSize * (conf.channelCount + 1) * downsampling_factor;
 	std::vector<int16_t> recv_buffer(chunk_words, 0);
 	int sz = sizeof(int16_t);
 	int nTransferSz = sz * (int)recv_buffer.size();
-	unsigned int outbufferChannelCount = conf.channelCount +(m_bSampledMarkersEEG ? 1 : 0);
+	unsigned int outbufferChannelCount = conf.channelCount + (m_bSampledMarkersEEG ? 1 : 0);
 	std::vector<std::vector<T>> send_buffer_vec(conf.chunkSize, std::vector<T>(outbufferChannelCount));
 	std::vector<T> sample_buffer(outbufferChannelCount, 0);
 	std::vector<T> send_buffer(conf.chunkSize * outbufferChannelCount, 0);
@@ -565,8 +629,15 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 	std::vector<std::string> marker_buffer(conf.chunkSize, std::string());
 	std::string s_mrkr;
 
-	const std::string streamprefix = "BrainAmpSeries-Dev_" + std::to_string(conf.deviceNumber);
-
+	const std::string streamprefix = "BrainAmpSeries";
+	//float gsrRes = 10.0 * 20.5575 / (100 * 25);
+	float auxRes = 10.0 * 20.5575;
+	std::vector<T> scale_factors;
+	for (int i = 0; i < conf.channelCount; i++)
+	{
+		T s = std::is_same<T, float>::value ? (IsAuxChannel(i) ? (auxRes) : unit_scales[conf.resolution]) : 1;
+		scale_factors.push_back(s);
+	}
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 	// for keeping track of sampled marker stream data
@@ -582,18 +653,21 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		// create data streaminfo and append some meta-data
 		auto stream_format = sendRawStream ? lsl::cf_int16 : lsl::cf_float32;
 		lsl::stream_info data_info(streamprefix, "EEG", outbufferChannelCount, sampling_rate,
-			stream_format, streamprefix /*+ '_' + std::to_string(conf.serialNumber)*/ + "_SR-" + std::to_string(sampling_rate));
+			stream_format, streamprefix /* + '_' + std::to_string(conf.serialNumber)*/ + "_SR-" + std::to_string(sampling_rate));
 		lsl::xml_element channels = data_info.desc().append_child("channels");
-		std::string postprocessing_factor =
-			sendRawStream ? std::to_string(unit_scales[conf.resolution]) : "1";
 		int c = 0;
+
 		for (const auto& channelLabel : conf.channelLabels)
 		{
+			bool isExG = false;
+			for (auto& it : m_vnExGChannelMap)
+				if (c == it)
+					isExG = true;
 			channels.append_child("channel")
 				.append_child_value("label", channelLabel)
-				.append_child_value("type", "EEG")
-				.append_child_value("unit", "microvolts")
-				.append_child_value("scaling_factor", (IsAuxChannel(c))? :  postprocessing_factor);
+				.append_child_value("type", (isExG ? ("ExG") : "EEG"))
+				.append_child_value("unit", (std::is_same<T, float>::value ? ("microvolts") : "INT_16"))
+				.append_child_value("scalingfactor", isExG ? std::to_string(10) : std::to_string(unit_scales[conf.resolution]));
 			c++;
 		}
 		if (m_bSampledMarkersEEG) {
@@ -601,15 +675,13 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 				.append_child_value("label", "triggerStream")
 				.append_child_value("type", "EEG")
 				.append_child_value("unit", "code");
-			
+
 		}
 
 		data_info.desc()
 			.append_child("amplifier")
 			.append_child("settings")
 			.append_child_value("low_impedance_mode", conf.lowImpedanceMode ? "true" : "false")
-			.append_child_value("resolution", unit_strings[conf.resolution])
-			.append_child_value("resolutionfactor", std::to_string(unit_scales[conf.resolution]))
 			.append_child_value("dc_coupling", conf.dcCoupling ? "DC" : "AC");
 		data_info.desc()
 			.append_child("acquisition")
@@ -639,12 +711,12 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			lsl::stream_info marker_info(streamprefix + "-Markers", "Markers", 1, 0, lsl::cf_string,
 				streamprefix /*+ '_' + std::to_string(conf.serialNumber)*/ + "_markers");
 			marker_outlet.reset(new lsl::stream_outlet(marker_info));
-		}  
+		}
 
 		// enter transmission loop
-		DWORD bytes_read;
-		const T scale = std::is_same<T, float>::value ? unit_scales[conf.resolution] : 1;
-		const T aux_scale = std::is_same<T, float>::value ? 10.0 * PRESCALE_EXGAUX_FACTOR : 1;
+		DWORD bytes_read = 0;
+
+
 		while (!shutdown) {
 			// read chunk into recv_buffer
 			if (!ReadFile(m_hDevice, &recv_buffer[0], (int)2 * chunk_words, &bytes_read, nullptr))
@@ -661,12 +733,12 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 				// check for errors
 				long error_code = 0;
 				if (DeviceIoControl(m_hDevice, IOCTL_BA_ERROR_STATE, nullptr, 0, &error_code,
-						sizeof(error_code), &bytes_read, nullptr) &&
+					sizeof(error_code), &bytes_read, nullptr) &&
 					error_code)
 					throw std::runtime_error(
 						((error_code & 0xFFFF) >= 0 && (error_code & 0xFFFF) <= 4)
-							? error_messages[error_code & 0xFFFF]
-							: "Unknown error (your driver version might not yet be supported).");
+						? error_messages[(int)(error_code & 0xFFFF)]
+						: "Unknown error (your driver version might not yet be supported).");
 				std::this_thread::yield();
 				continue;
 			}
@@ -682,7 +754,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			for (int c = 0; c < conf.channelCount; c++)
 			{
 				inter_it = inter_buffer.begin();
-				for (int s = 0; s < conf.chunkSize*downsampling_factor; s++)
+				for (int s = 0; s < conf.chunkSize * downsampling_factor; s++)
 					// +1 to include trigger data, which doesn't get downsampled or filtered
 					*inter_it++ = *(recvbuf_it + (c + s * (conf.channelCount + 1)));
 				downsamplers[c].Downsample(&inter_buffer[0]);
@@ -690,12 +762,11 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 
 			for (int c = 0; c < conf.channelCount; c++)
 				for (int s = 0; s < conf.chunkSize; s++)
-					send_buffer_vec[s][c] = downsamplers[c].m_ptDataOut[s] * scale;
-
+					send_buffer_vec[s][c] = downsamplers[c].m_ptDataOut[s] * scale_factors[c];
 
 			//for (int s = 0; s < conf.chunkSize; s++)
 			int nOutBufferSampleCtr = 0;
-			for (int s = 0; s < conf.chunkSize*downsampling_factor; s++)
+			for (int s = 0; s < conf.chunkSize * downsampling_factor; s++)
 			{
 				//mrkr = (uint16_t)downsamplers[conf.channelCount].m_ptDataOut[s];
 				mrkr = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
@@ -706,7 +777,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 						// send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
 					// else
 					send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
-					
+
 
 				if (m_bUnsampledMarkers)
 				{
@@ -714,7 +785,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 					{
 						s_mrkr = std::to_string((int)mrkr);
 						int num = 1;
-						if(sampling_rate != 5000)
+						if (sampling_rate != 5000)
 							num = nOutBufferSampleCtr + 1 - conf.chunkSize;
 						else
 							num = s + 1 - conf.chunkSize;
@@ -724,14 +795,15 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 					}
 				}
 				prev_mrkr = mrkr;
-				if((s%downsampling_factor)==0 && s!=0)
+				if ((s % downsampling_factor) == 0 && s != 0)
 					nOutBufferSampleCtr++;
 			}
 
 			// push data chunk into the outlet
 			data_outlet.push_chunk(send_buffer_vec, now);
 		}
-	} catch (std::exception &e) {
+	}
+	catch (std::exception& e) {
 		// any other error
 		std::cout << "Exception in read thread: " << e.what();
 	}
@@ -747,7 +819,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
  * @param filename	Optional file name supplied e.g. as command line parameter
  * @return Path to a found config file
  */
-QString MainWindow::find_config_file(const char *filename) {
+QString MainWindow::find_config_file(const char* filename) {
 	if (filename) {
 		QString qfilename(filename);
 		if (!QFileInfo::exists(qfilename))
@@ -761,7 +833,7 @@ QString MainWindow::find_config_file(const char *filename) {
 	QString defaultCfgFilename(exeInfo.completeBaseName() + ".cfg");
 	QStringList cfgpaths;
 	cfgpaths << QDir::currentPath()
-			 << QStandardPaths::standardLocations(QStandardPaths::ConfigLocation) << exeInfo.path();
+		<< QStandardPaths::standardLocations(QStandardPaths::ConfigLocation) << exeInfo.path();
 	for (auto path : cfgpaths) {
 		QString cfgfilepath = path + QDir::separator() + defaultCfgFilename;
 		if (QFileInfo::exists(cfgfilepath)) return cfgfilepath;
