@@ -48,6 +48,8 @@ using UCHAR = unsigned char;
 #endif
 
 
+const uint16_t DEFAULT_TRIGGER_VALUE = 32895;
+
 const double PRESCALE_EXGAUX_FACTOR = 20.5575;
 const int sampling_rates[] = { 5000, 2500, 1000, 500, 250, 200, 100 };
 double sampling_rate = (double)sampling_rates[0];
@@ -271,15 +273,15 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 	}
 	if (nChannels != conf.channelCount)
 	{
-		error_string = ("Channel count does not match available channels on device: " + nChannels);
+		error_string = "Channel count does not match available channels on device(s): " + std::to_string(nChannels);
 		goto error_message;
 	}
 	if (!bHasDC)
 	{
 		if (conf.dcCoupling)
-			error_string = "DC Coupling not supported on this device."; goto error_message;
+			error_string = "DC Coupling not supported on one or more devices."; goto error_message;
 		if (conf.lowImpedanceMode)
-			error_string = "Low Impedance Mode not supported on this device."; goto error_message;
+			error_string = "Low Impedance Mode not supported on one or more devices."; goto error_message;
 	}
 	//if (bHasDC || bHasMR)
 	//{
@@ -294,7 +296,7 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 		}
 	if (!bHasExG16 && m_vnGsrChannelMap.size() != 0)
 	{
-		error_string = "Do not label channels with GSR or gsr unless ExG16 is attached.";
+		error_string = "Do not label channels with \'GSR\' or \'gsr\' unless ExG16 is attached.";
 		goto error_message;
 	}
 
@@ -306,6 +308,8 @@ void MainWindow::CheckAmpTypeAgainstConfig(BA_SETUP* setup, USHORT* ampTypes, Re
 	// set mr lowpass based on amp types and settings
 	SetLowPass(setup, ampTypes, conf.useMRLowPass);
 	setup->nLowImpedance = conf.lowImpedanceMode;
+	m_bPassesConfigCheck = true;
+	return;
 error_message:
 	QMessageBox::critical(this, "Error",
 		QString(("Error configuring BrainAmp device(s): " + error_string).c_str()),
@@ -485,6 +489,7 @@ void MainWindow::toggleRecording() {
 		// === perform link action ===
 
 		try {
+			m_bPassesConfigCheck = false;
 			// get the UI parameters...
 			setSamplingRate();
 			ReaderConfig conf;
@@ -541,7 +546,7 @@ void MainWindow::toggleRecording() {
 			for (unsigned char c = 0; c < conf.channelCount; c++)
 				setup.nChannelList[c] = c + (conf.usePolyBox ? -8 : 0);
 			setup.nPoints = conf.chunkSize * downsampling_factor;
-			setup.nHoldValue = 0;
+			setup.nHoldValue = 255;
 
 			USHORT amp_types[4] = { 0,0,0,0 };
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_AMPLIFIER_TYPE, nullptr, 0, amp_types,
@@ -551,8 +556,11 @@ void MainWindow::toggleRecording() {
 			CheckAmpTypeAgainstConfig(&setup, amp_types, conf);
 
 			m_bPullUpHiBits = true;
-			m_bPullUpLowBits = false;
-			m_nPullDir = (m_bPullUpLowBits ? 0xff : 0) | (m_bPullUpHiBits ? 0xff00 : 0);
+			m_bPullUpLowBits = true;
+			// NOTE: the commented code was done to match Recorder's habit of inverting the 
+			// marker values for 'High Active' and 'Low Active' bits
+			// In this app, we send the raw values and keep the pull up resistors high.
+			m_nPullDir = 0;//(m_bPullUpLowBits ? 0xff : 0) | (m_bPullUpHiBits ? 0xff00 : 0);
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_DIGITALINPUT_PULL_UP, &m_nPullDir,
 				sizeof(m_nPullDir), nullptr, 0, &bytes_returned, nullptr))
 				throw std::runtime_error("Could not apply pull up/down parameter.");
@@ -567,11 +575,23 @@ void MainWindow::toggleRecording() {
 				nullptr, 0, &bytes_returned, nullptr))
 				throw std::runtime_error("Could not start recording.");
 
-			// start reader thread
-			shutdown = false;
-			auto function_handle = &MainWindow::read_thread<float>;
-			//auto function_handle = sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
-			reader.reset(new std::thread(function_handle, this, conf));
+			if (!m_bPassesConfigCheck)
+			{
+				CloseHandle(m_hDevice);
+			}
+			else
+			{
+				// start reader thread
+				shutdown = false;
+				auto function_handle = &MainWindow::read_thread<float>;
+				//auto function_handle = sendRawStream ? &MainWindow::read_thread<int16_t> : &MainWindow::read_thread<float>;
+				reader.reset(new std::thread(function_handle, this, conf));
+				// done, all successful
+				ui->linkButton->setText("Unlink");
+				ui->deviceSettingsGroup->setEnabled(false);
+				ui->triggerSettingsGroup->setEnabled(false);
+				ui->channelLabelsGroup->setEnabled(false);
+			}
 		}
 
 		catch (std::exception& e) {
@@ -596,13 +616,6 @@ void MainWindow::toggleRecording() {
 				QMessageBox::Ok);
 			return;
 		}
-
-		// done, all successful
-		ui->linkButton->setText("Unlink");
-		ui->deviceSettingsGroup->setEnabled(false);
-		ui->triggerSettingsGroup->setEnabled(false);
-		ui->channelLabelsGroup->setEnabled(false);
-
 	}
 }
 
@@ -673,7 +686,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		if (m_bSampledMarkersEEG) {
 			channels.append_child("channel")
 				.append_child_value("label", "triggerStream")
-				.append_child_value("type", "EEG")
+				.append_child_value("type", "AUX")
 				.append_child_value("unit", "code");
 
 		}
@@ -750,12 +763,13 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			auto sendbuf_it = send_buffer.begin();
 			auto inter_it = inter_buffer.begin();
 
-			//for (int c = 0; c < conf.channelCount + 1; c++)
+			// channelCount does not include the trigger channel, which
+			// does not get downsampled
 			for (int c = 0; c < conf.channelCount; c++)
 			{
 				inter_it = inter_buffer.begin();
 				for (int s = 0; s < conf.chunkSize * downsampling_factor; s++)
-					// +1 to include trigger data, which doesn't get downsampled or filtered
+					// +1 to account for skipped trigger data not part of channelCount
 					*inter_it++ = *(recvbuf_it + (c + s * (conf.channelCount + 1)));
 				downsamplers[c].Downsample(&inter_buffer[0]);
 			}
@@ -768,20 +782,18 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			int nOutBufferSampleCtr = 0;
 			for (int s = 0; s < conf.chunkSize * downsampling_factor; s++)
 			{
-				//mrkr = (uint16_t)downsamplers[conf.channelCount].m_ptDataOut[s];
-				mrkr = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
-				mrkr ^= m_nPullDir;
-
+				uint16_t mrkr_orig = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
+				mrkr = mrkr_orig ^ m_nPullDir;
 				if (m_bSampledMarkersEEG)
-					// if (sampling_rate != 5000)
-						// send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = static_cast<T>(mrkr);// ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
-					// else
-					send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
+					if (sampling_rate != 5000)
+						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = ((mrkr == DEFAULT_TRIGGER_VALUE) ? -1 : static_cast<T>(mrkr));
+					else
+						send_buffer_vec[s][conf.channelCount] = ((mrkr == DEFAULT_TRIGGER_VALUE) ? -1 : static_cast<T>(mrkr));
 
 
 				if (m_bUnsampledMarkers)
 				{
-					if (mrkr != prev_mrkr)
+					if (mrkr!=prev_mrkr)
 					{
 						s_mrkr = std::to_string((int)mrkr);
 						int num = 1;
@@ -806,6 +818,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 	catch (std::exception& e) {
 		// any other error
 		std::cout << "Exception in read thread: " << e.what();
+		std::terminate();
 	}
 }
 
