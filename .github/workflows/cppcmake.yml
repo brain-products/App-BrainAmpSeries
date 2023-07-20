@@ -23,10 +23,10 @@ jobs:
         - Win64
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Install Qt32 (Windows)
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v3
       if: matrix.platform == 'Win32'
       with:
         arch: win32_msvc2019
