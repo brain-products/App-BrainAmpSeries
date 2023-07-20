@@ -69,7 +69,7 @@ jobs:
            cmake --build build --config Release -j --target bundle
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2-preview
+      uses: actions/upload-artifact@v3-preview
       with:
         name: pkg-${{ matrix.platform }}
         path: |
