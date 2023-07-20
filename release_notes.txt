@@ -1,5 +1,6 @@
 BrainAmpSeries Connector v.1.17.0
--feature: add support for ExG aux channels (still in beta)
+-feature: enhanced support for GSR preprocessing
+-feature: add support for ExG aux channels
 -feature: remove raw streaming data option
 -feature: remove device counter
 -feature: check GUI settings against possible amplifier configuration before connnecting

@@ -74,8 +74,10 @@ private:
 	bool m_bUnsampledMarkers{false};
 	bool m_bSampledMarkersEEG{false};
 	bool m_bOverrideAutoUpdate;
-	bool m_bPullUpHiBits;
-	bool m_bPullUpLowBits;
+	//bool m_bPullUpHiBits;
+	//bool m_bPullUpLowBits;
+	uint16_t m_nTriggerMask = 0xffff;
+	bool m_bPassesConfigCheck = false;
 	uint16_t m_nPullDir;
 	t_AppVersion m_AppVersion;
 	Ui::MainWindow *ui;

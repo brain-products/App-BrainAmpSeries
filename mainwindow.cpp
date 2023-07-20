@@ -372,7 +372,7 @@ void MainWindow::SetResolutions(BA_SETUP* setup, USHORT* ampTypes, uint8_t resol
 			{
 				m_vnExGChannelMap.push_back(c);
 				setup->nResolution[c] = (useAuxChannels && (i > 7)) ? 2 : resolution;
-				if (i > 7)m_vnAuxChannelMap.push_back(c);
+				if (useAuxChannels && (i > 7))m_vnAuxChannelMap.push_back(c);
 				c++;
 			}
 			break;
@@ -425,20 +425,20 @@ void MainWindow::SetLowPass(BA_SETUP* setup, USHORT* ampTypes, bool useMRLowPass
 			break;
 		case 1:
 			for (int i = 0; i < 32; i++)
-				setup->n250Hertz[c] = false;
+				setup->n250Hertz[c++] = false;
 			break;
 		case 2:
 		case 3:
 			for (int i = 0; i < 32; i++)
-				setup->n250Hertz[c] = useMRLowPass;
+				setup->n250Hertz[c++] = useMRLowPass;
 			break;
 		case 4:
 			for (int i = 0; i < 8; i++)
-				setup->nDCCoupling[c++] = false;
+				setup->n250Hertz[c++] = false;
 			break;
 		case 5:
 			for (int i = 0; i < 16; i++)
-				setup->nDCCoupling[c++] = false;
+				setup->n250Hertz[c++] = false;
 			break;
 		case 6:
 			break;
@@ -555,12 +555,11 @@ void MainWindow::toggleRecording() {
 
 			CheckAmpTypeAgainstConfig(&setup, amp_types, conf);
 
-			m_bPullUpHiBits = true;
-			m_bPullUpLowBits = true;
-			// NOTE: the commented code was done to match Recorder's habit of inverting the 
-			// marker values for 'High Active' and 'Low Active' bits
-			// In this app, we send the raw values and keep the pull up resistors high.
-			m_nPullDir = 0;//(m_bPullUpLowBits ? 0xff : 0) | (m_bPullUpHiBits ? 0xff00 : 0);
+			//m_bPullUpHiBits = ui->cbUseHighBitsPullDown->checkState() != Qt::Checked;
+			//m_bPullUpLowBits = true;
+			//m_nPullDir = (m_bPullUpLowBits ? 0xff : 0) | (m_bPullUpHiBits? 0xff00 : 0);
+			m_nTriggerMask = ui->cbUseUpperBits->checkState() == Qt::Checked ? 0xffff : 0x00ff;
+			m_nPullDir = 0xffff;
 			if (!DeviceIoControl(m_hDevice, IOCTL_BA_DIGITALINPUT_PULL_UP, &m_nPullDir,
 				sizeof(m_nPullDir), nullptr, 0, &bytes_returned, nullptr))
 				throw std::runtime_error("Could not apply pull up/down parameter.");
@@ -646,6 +645,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 	//float gsrRes = 10.0 * 20.5575 / (100 * 25);
 	float auxRes = 10.0 * 20.5575;
 	std::vector<T> scale_factors;
+
 	for (int i = 0; i < conf.channelCount; i++)
 	{
 		T s = std::is_same<T, float>::value ? (IsAuxChannel(i) ? (auxRes) : unit_scales[conf.resolution]) : 1;
@@ -783,7 +783,9 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			for (int s = 0; s < conf.chunkSize * downsampling_factor; s++)
 			{
 				uint16_t mrkr_orig = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
-				mrkr = mrkr_orig ^ m_nPullDir;
+				mrkr = mrkr_orig & m_nTriggerMask; //<-bit masking as requested by Brain Products
+				//uint16_t mrkr = (uint16_t)recv_buffer[conf.channelCount + s * (conf.channelCount + 1)];
+				
 				if (m_bSampledMarkersEEG)
 					if (sampling_rate != 5000)
 						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = ((mrkr == DEFAULT_TRIGGER_VALUE) ? -1 : static_cast<T>(mrkr));
