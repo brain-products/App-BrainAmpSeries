@@ -1,4 +1,5 @@
 BrainAmpSeries Connector v.1.17.0
+-feature: enchanced control over trigger resistors
 -feature: enhanced support for GSR preprocessing
 -feature: add support for ExG aux channels
 -feature: remove raw streaming data option
