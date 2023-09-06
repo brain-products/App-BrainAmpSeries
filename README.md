@@ -3,7 +3,7 @@ LSL connector for the BrainAmp family of devices from Brain Products.
 
 To download, please click the Release tab above for the latest versions.
 
-Please note that you may need to install the Microsoft C++ redistributable packages ([here](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)) in order to run the executables.
+Please note that you may need to install the Microsoft C++ redistributable packages ([here]([https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170))) in order to run the executables.
 
 # Getting Started
 If you are new to using LSL, you might want to read the [Quick Start guide](https://labstreaminglayer.readthedocs.io/info/getting_started.html) on the LabStreamingLayer main repository. 
