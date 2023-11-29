@@ -1,9 +1,8 @@
-BrainAmpSeries Connector v.1.17.1
+BrainAmpSeries Connector v.1.18.0
 -feature: stream lag correction in config file
 -bugfix: trigger stream reverts to -1 when no new trigger available
 
 BrainAmpSeries Connector v.1.17.0
--feature: enchanced control over trigger resistors
 -feature: enhanced support for GSR preprocessing
 -feature: add support for ExG aux channels
 -feature: remove raw streaming data option
