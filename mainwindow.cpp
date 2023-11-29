@@ -197,6 +197,7 @@ void MainWindow::load_config(const QString& filename) {
 	ui->chunkSize->setValue(pt.value("settings/chunksize", 32).toInt());
 	ui->usePolyBox->setChecked(pt.value("settings/usepolybox", false).toBool());
 	ui->useAuxChannels->setChecked(pt.value("settings/useauxchannels", false).toBool());
+	m_dCompensatedStreamLag = pt.value("settings/compensatedstreamlag", 0.0).toDouble();
 	//ui->sendRawStream->setChecked(pt.value("settings/sendrawstream", false).toBool());
 	ui->unsampledMarkers->setChecked(pt.value("settings/unsampledmarkers", false).toBool());
 	ui->sampledMarkersEEG->setChecked(pt.value("settings/sampledmarkersEEG", false).toBool());
@@ -218,6 +219,7 @@ void MainWindow::save_config(const QString& filename) {
 	pt.setValue("chunksize", ui->chunkSize->value());
 	pt.setValue("usepolybox", ui->usePolyBox->isChecked());
 	pt.setValue("useauxchannels", ui->useAuxChannels->isChecked());
+	pt.setValue("compensatedstreamlag", m_dCompensatedStreamLag);
 	//pt.setValue("sendrawstream", ui->sendRawStream->isChecked());
 	pt.setValue("unsampledmarkers", ui->unsampledMarkers->isChecked());
 	pt.setValue("sampledmarkersEEG", ui->sampledMarkersEEG->isChecked());
@@ -699,7 +701,9 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 		data_info.desc()
 			.append_child("acquisition")
 			.append_child_value("manufacturer", "Brain Products")
-			.append_child_value("serial_number", std::to_string(conf.serialNumber));
+			.append_child_value("serial_number", std::to_string(conf.serialNumber))
+			.append_child_value("compensated_lag", std::to_string(m_dCompensatedStreamLag));
+			
 
 		int32_t lslProtocolVersion = lsl::protocol_version();
 		int32_t lslLibVersion = lsl::library_version();
@@ -757,7 +761,7 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 			}
 
 			// All checks completed, transform and send the data
-			double now = lsl::local_clock();
+			double now = lsl::local_clock()-m_dCompensatedStreamLag;
 
 			auto recvbuf_it = recv_buffer.cbegin();
 			auto sendbuf_it = send_buffer.begin();
@@ -788,9 +792,9 @@ template <typename T> void MainWindow::read_thread(const ReaderConfig conf) {
 				
 				if (m_bSampledMarkersEEG)
 					if (sampling_rate != 5000)
-						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = ((mrkr == DEFAULT_TRIGGER_VALUE) ? -1 : static_cast<T>(mrkr));
+						send_buffer_vec[nOutBufferSampleCtr][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
 					else
-						send_buffer_vec[s][conf.channelCount] = ((mrkr == DEFAULT_TRIGGER_VALUE) ? -1 : static_cast<T>(mrkr));
+						send_buffer_vec[s][conf.channelCount] = ((mrkr == prev_mrkr) ? -1 : static_cast<T>(mrkr));
 
 
 				if (m_bUnsampledMarkers)

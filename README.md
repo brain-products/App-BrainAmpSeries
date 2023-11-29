@@ -106,3 +106,9 @@ The latest version of the BrainAmpSeries Connector uses [INI](https://en.wikiped
 ## Loading Channel Label Files
 
 Python users may automatically insert channel labels from a .bvef file into an LSL config file. To do so, please use the free utility [BVEF2lslconfig] (https://github.com/brain-products/BVEF2lslconfig). You can find many electrode position files with channel labels for common cap configurations on the Brain Products website [here](https://www.brainproducts.com/downloads.php?kid=44). 
+
+## Stream Lag Compensation
+
+Some users may wish to subtract device latency from the timestamps. This is an advanced feature and should only be done by users who are very confident that they know what they are doing. All hardware devices have latency due to buffering and data transfer. Drivers and operating systems will also add latency. On the BrainAmp devices, this latency is typically small and quite stable, but the exact value can vary depending on computer hardware and software. There are ways to measure device latency on a given setup, but it requires sophisticated engineering knowhow. 
+
+If it is desirable to compensate for known stream lag, an option can be set in the configuration file. Under the settings category, a value in seconds can be assigned to the 'compensatedstreamlag' variable. If set, this latency will be subtracted from all LSL timestamps. The default value is 0. This value will be included in the stream meta-data so it can be read by any connected LSL inlets. It will automatically be recorded in the stream's meta-data when using LabRecorder as well.

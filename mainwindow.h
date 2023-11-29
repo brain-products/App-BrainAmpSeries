@@ -20,7 +20,7 @@ struct ReaderConfig
 	int chunkSize, channelCount, serialNumber;
 	std::vector<std::string> channelLabels;
 	int useMRLowPass;
-	
+
 };
 
 
@@ -85,6 +85,7 @@ private:
 	std::vector<int> m_vnExGChannelMap;
 	std::vector<int> m_vnAuxChannelMap;
 	std::vector<int> m_vnGsrChannelMap;
+	double m_dCompensatedStreamLag = 0;
 };
 
 #endif // MAINWINDOW_H
