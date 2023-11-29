@@ -62,9 +62,13 @@ This is an optional lowpass filter executed at the hardware level. For MR record
 
 If you use the PolyBox, check the according box and prepend 8 channel labels at the beginning of the channel list (even if you only use a subset of them). Note that the PolyBox is not the same as the EMG box or other accessories.
 
-### Send Raw Stream (int16_t)
+### Use PolyBox
 
-The hardware itself sends raw data that is encoded as 16-bit integers. These values must be converted into floating point values corresponding to the actually measured microvoltages at the electrodes. If checked, the LSL stream outlet will send the BrainAmp's raw data. If not, it will convert the data appropriately.
+If checked, the first 8 channels will hold signals from the PolyBox. Make sure to increase the number of channels and change channel labels accordingly.
+
+### Use AUX Channels (ExG 9-16 only)
+
+When using BrainAmp ExG, if this option is checked, channels 9-16 will be recoreded as AUX channels. Otherwise, all 16 sensors will be bipolar.
 
 ## LSL Trigger Output Style
 
@@ -79,6 +83,10 @@ If 'Unsampled String Markers' is checked, the app will create a Marker stream on
 ### EEG Channel
 
 If this box is checked, an extra channel will be added to the EEG stream corresponding to the device triggers in. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the value at the trigger input when it changes value.
+
+### Activate bits 8-15
+
+Check this if using 16 bit triggering.
 
 ### Further Information
 

@@ -69,7 +69,7 @@ jobs:
            cmake --build build --config Release -j --target bundle
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3-preview
+      uses: actions/upload-artifact@v3
       with:
         name: pkg-${{ matrix.platform }}
         path: |
@@ -85,7 +85,7 @@ jobs:
     
     - name: Download Artifacts
       if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/download-artifact@v2-preview
+      uses: actions/download-artifact@v3
       # By not specifying with: name:, it defaults to downloading all artifacts.
 
     - name: Create Release
