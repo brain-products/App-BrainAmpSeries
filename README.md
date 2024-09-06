@@ -82,7 +82,7 @@ If 'Unsampled String Markers' is checked, the app will create a Marker stream on
 
 ### EEG Channel
 
-If this box is checked, an extra channel will be added to the EEG stream corresponding to the device triggers in. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the value at the trigger input when it changes value.
+If this box is checked, an extra channel named `"triggerStream"` will be added to the EEG stream corresponding to the device triggers in. Rather than unsampled markers, these channels will output -1 if no trigger is available, else the value corresponding to the value at the trigger input when it changes value.
 
 ### Activate bits 8-15
 
